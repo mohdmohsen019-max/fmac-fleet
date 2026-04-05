@@ -99,7 +99,7 @@ export function TopNav({ mode }: TopNavProps) {
                   {active && (
                     <motion.div
                       layoutId="active-pill"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c70017]"
+                      className="absolute bottom-[-6px] left-0 right-0 h-0.5 bg-[#c70017]"
                       transition={{ type: "spring", stiffness: 350, damping: 30 }}
                     />
                   )}
