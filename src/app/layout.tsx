@@ -15,6 +15,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "FMAC Fleet Management System",
   description: "Track fleet usage, log trips, and manage vehicle maintenance.",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
