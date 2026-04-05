@@ -1,0 +1,73 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Core Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isOwner(userId);
+    }
+
+    // --- Vehicles Collection ---
+    match /vehicles/{vehicleId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- Trips Collection ---
+    match /trips/{tripId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(request.resource.data.driverId);
+      allow update, delete: if isAdmin() || isOwner(resource.data.driverId);
+    }
+
+    // --- Odometer Logs ---
+    match /odometerLogs/{logId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(request.resource.data.recordedBy);
+      allow update, delete: if isAdmin() || isOwner(resource.data.recordedBy);
+    }
+
+    // --- Maintenance Logs ---
+    match /maintenanceLogs/{logId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- Behavior Intelligence (Violations & Scorecards) ---
+    match /violations/{vId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    match /scorecards/{sId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // --- Monthly Statements ---
+    match /monthlyStatements/{sId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    // Default Deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

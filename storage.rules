@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Core Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // --- Global Access ---
+    match /{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn(); // Basic protection; can be refined if specific folders are added
+    }
+  }
+}
