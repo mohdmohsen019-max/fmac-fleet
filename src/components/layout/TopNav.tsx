@@ -7,6 +7,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X, LogOut } from "lucide-react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface NavItem {
   key: string;
@@ -70,18 +71,16 @@ export function TopNav({ mode }: TopNavProps) {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-5 lg:gap-7">
+          <nav className="hidden md:flex items-center gap-5 lg:gap-7 h-full">
             {items.map((item) => {
               const active = isActive(item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-sm font-medium transition-colors duration-150 whitespace-nowrap"
+                  className="relative text-sm font-medium transition-colors duration-200 whitespace-nowrap h-full flex items-center px-1"
                   style={{
                     color: active ? "#c70017" : "#5d3f3c",
-                    borderBottom: active ? "2px solid #c70017" : "2px solid transparent",
-                    paddingBottom: "2px",
                   }}
                   onMouseEnter={(e) => {
                     if (!active) (e.currentTarget as HTMLElement).style.color = "#c70017";
@@ -90,7 +89,20 @@ export function TopNav({ mode }: TopNavProps) {
                     if (!active) (e.currentTarget as HTMLElement).style.color = "#5d3f3c";
                   }}
                 >
-                  {t(item.key)}
+                  <motion.span
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {t(item.key)}
+                  </motion.span>
+                  
+                  {active && (
+                    <motion.div
+                      layoutId="active-pill"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c70017]"
+                      transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                    />
+                  )}
                 </Link>
               );
             })}
@@ -144,62 +156,66 @@ export function TopNav({ mode }: TopNavProps) {
       </div>
 
       {/* ── Mobile slide-down panel ── */}
-      <div
-        style={{
-          overflow: "hidden",
-          maxHeight: mobileOpen ? "420px" : "0px",
-          opacity: mobileOpen ? 1 : 0,
-          transition: "max-height 340ms cubic-bezier(0.4,0,0.2,1), opacity 280ms ease",
-          backgroundColor: "#f9ecdb",
-          borderTop: mobileOpen ? "1px solid rgba(146,111,107,0.18)" : "1px solid transparent",
-        }}
-      >
-        <nav className="flex flex-col px-4 pt-2 pb-4 gap-0.5">
-          {items.map((item, idx) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="py-3 px-3 text-sm font-medium rounded-sm transition-colors duration-150"
-                style={{
-                  color: active ? "#c70017" : "#5d3f3c",
-                  backgroundColor: active ? "rgba(199,0,23,0.06)" : "transparent",
-                  borderLeft: active ? "2px solid #c70017" : "2px solid transparent",
-                  animationDelay: `${idx * 40}ms`,
-                }}
-              >
-                {t(item.key)}
-              </Link>
-            );
-          })}
-
-          {/* Divider + sign out */}
-          <div
-            className="mt-3 pt-3"
-            style={{ borderTop: "1px solid rgba(146,111,107,0.18)" }}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            style={{
+              overflow: "hidden",
+              backgroundColor: "#f9ecdb",
+              borderTop: "1px solid rgba(146,111,107,0.18)",
+            }}
           >
-            {profile && (
-              <p
-                className="text-xs font-bold uppercase tracking-widest mb-3 px-3 truncate"
-                style={{ color: "#5d3f3c" }}
+            <nav className="flex flex-col px-4 pt-2 pb-4 gap-0.5">
+              {items.map((item, idx) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="py-3 px-3 text-sm font-medium rounded-sm transition-colors duration-150"
+                    style={{
+                      color: active ? "#c70017" : "#5d3f3c",
+                      backgroundColor: active ? "rgba(199,0,23,0.06)" : "transparent",
+                      borderLeft: active ? "2px solid #c70017" : "2px solid transparent",
+                    }}
+                  >
+                    {t(item.key)}
+                  </Link>
+                );
+              })}
+
+              {/* Divider + sign out */}
+              <div
+                className="mt-3 pt-3"
+                style={{ borderTop: "1px solid rgba(146,111,107,0.18)" }}
               >
-                {profile.displayName || profile.email}
-              </p>
-            )}
-            <button
-              onClick={() => { signOut(); setMobileOpen(false); }}
-              className="flex items-center gap-2 py-2.5 px-3 text-sm font-semibold rounded-sm w-full text-left transition-colors duration-150"
-              style={{ color: "#c70017" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(199,0,23,0.06)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
-            >
-              <LogOut size={14} />
-              {t("sign_out")}
-            </button>
-          </div>
-        </nav>
-      </div>
+                {profile && (
+                  <p
+                    className="text-xs font-bold uppercase tracking-widest mb-3 px-3 truncate"
+                    style={{ color: "#5d3f3c" }}
+                  >
+                    {profile.displayName || profile.email}
+                  </p>
+                )}
+                <button
+                  onClick={() => { signOut(); setMobileOpen(false); }}
+                  className="flex items-center gap-2 py-2.5 px-3 text-sm font-semibold rounded-sm w-full text-left transition-colors duration-150"
+                  style={{ color: "#c70017" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(199,0,23,0.06)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+                >
+                  <LogOut size={14} />
+                  {t("sign_out")}
+                </button>
+              </div>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

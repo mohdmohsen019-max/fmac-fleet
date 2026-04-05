@@ -1,5 +1,6 @@
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { TopNav } from "@/components/layout/TopNav";
+import { PageTransition } from "@/components/layout/PageTransition";
 
 export default function AdminLayout({
   children,
@@ -11,7 +12,9 @@ export default function AdminLayout({
       <div className="min-h-screen" style={{ backgroundColor: "#fff8f2" }}>
         <TopNav mode="admin" />
         <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10">
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
         <footer
           className="max-w-7xl mx-auto px-4 md:px-6 py-8 mt-16"
