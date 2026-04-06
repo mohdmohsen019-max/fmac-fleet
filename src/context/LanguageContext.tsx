@@ -25,6 +25,8 @@ const translations: Record<Language, Record<string, string>> = {
     vehicles: "Vehicles",
     maintenance: "Maintenance",
     reports: "Reports",
+    behavior: "Behavior Monitoring",
+    "risk management": "Risk Management",
     settings: "Settings",
     "sign out": "Sign out",
     // FMAC branding — never translated
@@ -216,8 +218,7 @@ const translations: Record<Language, Record<string, string>> = {
     "failed export": "Failed to export.",
     download: "Download",
 
-    // Behavior
-    behavior: "Behavior",
+    // Behavior (Old is now Risk Management)
     "behavior desc": "Vehicle driving performance and safety intelligence.",
     "fleet behavior": "Fleet Behavior Intelligence",
     scoreboard: "Vehicle Scoreboard",
@@ -346,6 +347,8 @@ const translations: Record<Language, Record<string, string>> = {
     vehicles: "المركبات",
     maintenance: "الصيانة",
     reports: "التقارير",
+    behavior: "مراقبة سلوك القيادة",
+    "risk management": "إدارة المخاطر",
     settings: "الإعدادات",
     "sign out": "تسجيل الخروج",
     "fmac fleet": "FMAC Fleet",
@@ -536,8 +539,7 @@ const translations: Record<Language, Record<string, string>> = {
     "failed export": "فشل التصدير.",
     download: "تحميل",
 
-    // Behavior
-    behavior: "سلوك القيادة",
+    // Behavior (Risk Management)
     "behavior desc": "ذكاء أداء القيادة وسلامة المركبات.",
     "fleet behavior": "ذكاء سلوك الأسطول",
     scoreboard: "لوحة أداء المركبات",
@@ -666,6 +668,8 @@ const translations: Record<Language, Record<string, string>> = {
     vehicles: "گاڑیاں",
     maintenance: "دیکھ بھال",
     reports: "رپورٹس",
+    behavior: "رویہ کی نگرانی",
+    "risk management": "رسک مینجمنٹ",
     settings: "ترتیبات",
     "sign out": "لاگ آؤٹ",
     "fmac fleet": "FMAC Fleet",
@@ -856,8 +860,7 @@ const translations: Record<Language, Record<string, string>> = {
     "failed export": "برآمد ناکام ہوا۔",
     download: "ڈاؤن لوڈ",
 
-    // Behavior
-    behavior: "ڈرائیونگ کا رویہ",
+    // Behavior (Risk Management)
     "behavior desc": "گاڑی چلانے کی کارکردگی اور حفاظتی معلومات۔",
     "fleet behavior": "اسطول کے رویے کی معلومات",
     scoreboard: "وہیکل اسکور بورڈ",

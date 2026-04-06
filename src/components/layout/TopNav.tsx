@@ -20,6 +20,7 @@ const adminNavItems: NavItem[] = [
   { key: "vehicles",     href: "/admin/vehicles" },
   { key: "maintenance",  href: "/admin/maintenance" },
   { key: "reports",      href: "/admin/reports" },
+  { key: "risk management", href: "/admin/risk-management" },
   { key: "behavior",     href: "/admin/behavior" },
   { key: "settings",     href: "/admin/settings" },
 ];

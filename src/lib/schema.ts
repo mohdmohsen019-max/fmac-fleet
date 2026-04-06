@@ -73,6 +73,11 @@ export interface Violation {
   plate: string;
   date: Timestamp;
   type: string;
+  location?: string;
+  source: "AI Camera" | "Manual" | "Operational Report";
+  uploadBatchId?: string;
+  periodStart?: Timestamp;
+  periodEnd?: Timestamp;
 }
 
 export interface Scorecard {
