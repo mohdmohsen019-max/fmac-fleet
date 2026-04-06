@@ -40,6 +40,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, Legend, ResponsiveContainer,
   ScatterChart, Scatter, ZAxis
 } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
 
 const CHART_COLORS = ["#c70017", "#f59e0b", "#10b981", "#3b82f6", "#6366f1"];
 const RISK_COLORS = {
@@ -71,6 +72,33 @@ const cleanNum = (val: any): number => {
   const cleaned = String(val).replace(/\s/g, '').replace(/,/g, '');
   const num = parseFloat(cleaned);
   return isNaN(num) ? 0 : num;
+};
+
+const IntelligenceTooltip = ({ title, text, children }: { title: string; text: string; children: React.ReactNode }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative h-full" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+      {children}
+      <AnimatePresence>
+        {show && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute z-[100] left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-4 bg-[#211b10] shadow-2xl rounded-sm pointer-events-none"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-1 h-3 bg-[#c70017]" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#fff8f2]">{title}</p>
+            </div>
+            <p className="text-xs leading-relaxed text-[#a8a29e]">{text}</p>
+            {/* Arrow */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#211b10]" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 export default function BehaviorPage() {
@@ -396,100 +424,110 @@ export default function BehaviorPage() {
       {/* Stats Summary Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Fleet KM Tracking", val: stats.totalKm.toFixed(0), sub: "Operational Range", icon: <Activity size={18} /> },
-          { label: "Fleet Intensity Index", val: stats.avgAlertsPerKm.toFixed(3), sub: "Industry Baseline: 0.450", icon: <TrendingUp size={18} /> },
-          { label: "Active Risk Units", val: stats.highRisk, sub: "Threshold: 75+", icon: <Shield size={18} />, highlight: stats.highRisk > 0 },
-          { label: "Operational Vehicles", val: stats.total, sub: "Data Integrity", icon: <Zap size={18} /> }
+          { label: "Fleet KM Tracking", val: stats.totalKm.toFixed(0), sub: "Operational Range", icon: <Activity size={18} />, hint: "Total distance traveled by the fleet in the current reporting period." },
+          { label: "Fleet Intensity Index", val: stats.avgAlertsPerKm.toFixed(3), sub: "Industry Baseline: 0.450", icon: <TrendingUp size={18} />, hint: "Average alerts per 1 KM. Lower is safer. Baseline is 0.450." },
+          { label: "Active Risk Units", val: stats.highRisk, sub: "Threshold: 75+", icon: <Shield size={18} />, highlight: stats.highRisk > 0, hint: "Number of vehicles currently exceeding the 75+ risk score threshold." },
+          { label: "Operational Vehicles", val: stats.total, sub: "Data Integrity", icon: <Zap size={18} />, hint: "Total number of vehicles detected and tracked in the operational data." }
         ].map((kpi, i) => (
-          <div key={i} className={`p-6 rounded-sm bg-white border ${kpi.highlight ? 'border-[#c70017]/30 ring-1 ring-[#c70017]/10' : 'border-[#926f6b]/10'}`}>
-            <p className="pl-overline mb-2 text-[#a8a29e]">{kpi.label}</p>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-3xl font-semibold tracking-tight ${kpi.highlight ? 'text-[#c70017]' : 'text-[#211b10]'}`}>{kpi.val}</span>
+          <IntelligenceTooltip key={i} title={kpi.label} text={kpi.hint}>
+            <div className={`p-6 h-full rounded-sm bg-white border ${kpi.highlight ? 'border-[#c70017]/30 ring-1 ring-[#c70017]/10' : 'border-[#926f6b]/10'} transition-all hover:border-[#c70017]/20`}>
+              <p className="pl-overline mb-2 text-[#a8a29e]">{kpi.label}</p>
+              <div className="flex items-baseline gap-2">
+                <span className={`text-3xl font-semibold tracking-tight ${kpi.highlight ? 'text-[#c70017]' : 'text-[#211b10]'}`}>{kpi.val}</span>
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-widest mt-4 flex items-center gap-2 text-[#a8a29e]">
+                {kpi.icon} {kpi.sub}
+              </p>
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-widest mt-4 flex items-center gap-2 text-[#a8a29e]">
-              {kpi.icon} {kpi.sub}
-            </p>
-          </div>
+          </IntelligenceTooltip>
         ))}
       </div>
 
       {/* Visual Intelligence Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Risk Score Histogram */}
-        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col">
-          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
-            <PieIcon size={14} /> Risk Distribution Spread
-          </h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={riskDistData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {riskDistData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <ReTooltip />
-              <Legend verticalAlign="bottom" height={36}/>
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <IntelligenceTooltip title="Risk Distribution Spread" text="Percentage breakdown of the fleet categorized by risk levels (High, Medium, Low).">
+          <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col hover:border-[#c70017]/20 transition-all">
+            <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
+              <PieIcon size={14} /> Risk Distribution Spread
+            </h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={riskDistData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {riskDistData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <ReTooltip />
+                <Legend verticalAlign="bottom" height={36}/>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </IntelligenceTooltip>
 
         {/* Alerts/km vs Average */}
-        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col">
-          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
-            <BarChart3 size={14} /> Intensity vs Fleet Average
-          </h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={benchmarkData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-              <ReTooltip cursor={{ fill: '#f9ecdb' }} />
-              <Legend />
-              <Bar dataKey="vehicle" name="Vehicle Alerts/KM" fill="#c70017" barSize={15} />
-              <Bar dataKey="fleet" name="Fleet Average" fill="#a8a29e" barSize={15} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <IntelligenceTooltip title="Intensity vs Fleet Average" text="Comparison of individual vehicles against the overall fleet average of 0.393 Alerts/KM.">
+          <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col hover:border-[#c70017]/20 transition-all">
+            <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
+              <BarChart3 size={14} /> Intensity vs Fleet Average
+            </h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={benchmarkData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                <ReTooltip cursor={{ fill: '#f9ecdb' }} />
+                <Legend />
+                <Bar dataKey="vehicle" name="Vehicle Alerts/KM" fill="#c70017" barSize={15} />
+                <Bar dataKey="fleet" name="Fleet Average" fill="#a8a29e" barSize={15} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </IntelligenceTooltip>
 
         {/* Top Risk Vehicles */}
-        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col">
-          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2 text-[#c70017]">
-            <TrendingUp size={14} /> Top 5 Risk Offenders
-          </h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={topBottomData.top} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f5f5f5" />
-              <XAxis type="number" domain={[0, 100]} hide />
-              <YAxis dataKey="plate" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-              <ReTooltip cursor={{ fill: '#c7001710' }} />
-              <Bar dataKey="riskScore" fill="#c70017" radius={[0, 4, 4, 0]} barSize={15} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <IntelligenceTooltip title="Top 5 Risk Offenders" text="The 5 fleet units with the highest aggregate risk scores across all performance vectors.">
+          <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col hover:border-[#c70017]/20 transition-all">
+            <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2 text-[#c70017]">
+              <TrendingUp size={14} /> Top 5 Risk Offenders
+            </h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topBottomData.top} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f5f5f5" />
+                <XAxis type="number" domain={[0, 100]} hide />
+                <YAxis dataKey="plate" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                <ReTooltip cursor={{ fill: '#c7001710' }} />
+                <Bar dataKey="riskScore" fill="#c70017" radius={[0, 4, 4, 0]} barSize={15} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </IntelligenceTooltip>
 
         {/* Bottom Risk Vehicles */}
-        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col">
-          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2 text-[#10b981]">
-            <Shield size={14} /> Top 5 Safety Leaders
-          </h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={topBottomData.bottom} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f5f5f5" />
-              <XAxis type="number" domain={[0, 100]} hide />
-              <YAxis dataKey="plate" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
-              <ReTooltip cursor={{ fill: '#10b98110' }} />
-              <Bar dataKey="riskScore" fill="#10b981" radius={[0, 4, 4, 0]} barSize={15} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <IntelligenceTooltip title="Top 5 Safety Leaders" text="The 5 fleet units demonstrating the most consistent safety performance and lowest risk scores.">
+          <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col hover:border-[#10b981]/20 transition-all">
+            <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2 text-[#10b981]">
+              <Shield size={14} /> Top 5 Safety Leaders
+            </h3>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topBottomData.bottom} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f5f5f5" />
+                <XAxis type="number" domain={[0, 100]} hide />
+                <YAxis dataKey="plate" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+                <ReTooltip cursor={{ fill: '#10b98110' }} />
+                <Bar dataKey="riskScore" fill="#10b981" radius={[0, 4, 4, 0]} barSize={15} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </IntelligenceTooltip>
       </div>
 
       {/* Main Decision Table */}
