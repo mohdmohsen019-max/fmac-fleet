@@ -27,7 +27,7 @@ export function AdminSidebar() {
         <div className="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center">
           <Car size={18} />
         </div>
-        <span className="font-bold tracking-tight text-lg">{t('fmac_fleet')}</span>
+        <span className="font-bold tracking-tight text-lg">{t("fmac fleet")}</span>
       </div>
 
       <nav className="flex-1 space-y-1">
@@ -63,7 +63,7 @@ export function AdminSidebar() {
           className="group flex w-full items-center rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
           <LogOut className="me-3 h-5 w-5 flex-shrink-0" />
-          {t('sign_out')}
+          {t("sign out")}
         </button>
       </div>
     </div>

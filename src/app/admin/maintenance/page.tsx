@@ -130,7 +130,7 @@ export default function MaintenancePage() {
           </div>
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none col-span-2 lg:col-span-1" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
             <span className="text-3xl font-semibold leading-none" style={{ color: "#c70017" }}>
-              {totalCost > 0 ? `AED ${totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—"}
+              {totalCost > 0 ? `${t("aed")} ${totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—"}
             </span>
             <p className="pl-overline mt-2">{t("total cost")}</p>
           </div>
@@ -157,7 +157,7 @@ export default function MaintenancePage() {
                   <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("select vehicle")}</Label>
                   <select value={selectedVehicle} onChange={e => setSelectedVehicle(e.target.value)} required className={selectCls}>
                     <option value="" disabled>{t("select vehicle placeholder")}</option>
-                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.plateNumber} ({v.type})</option>)}
+                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.plateNumber} ({t(v.type.toLowerCase())})</option>)}
                   </select>
                 </div>
                 <div className="space-y-1.5 sm:col-span-2 lg:col-span-4">
@@ -210,7 +210,7 @@ export default function MaintenancePage() {
                       <td className="px-5 py-4 text-sm font-bold whitespace-nowrap" style={{ color: "#211b10" }}>{v ? v.plateNumber : "—"}</td>
                       <td className="px-5 py-4 text-sm" style={{ color: "#5d3f3c" }}>{m.description}</td>
                       <td className="px-5 py-4 text-sm font-mono text-right whitespace-nowrap" style={{ color: "#211b10" }}>
-                        {m.cost !== undefined ? `AED ${m.cost.toFixed(2)}` : "—"}
+                        {m.cost !== undefined ? `${t("aed")} ${m.cost.toFixed(2)}` : "—"}
                       </td>
                     </tr>
                   );
@@ -237,7 +237,7 @@ export default function MaintenancePage() {
                       </p>
                     </div>
                     {m.cost !== undefined && (
-                      <span className="text-sm font-mono font-bold" style={{ color: "#c70017" }}>AED {m.cost.toFixed(2)}</span>
+                      <span className="text-sm font-mono font-bold" style={{ color: "#c70017" }}>{t("aed")} {m.cost.toFixed(2)}</span>
                     )}
                   </div>
                   <p className="text-sm mt-3 pt-3 border-t" style={{ color: "#5d3f3c", borderColor: "rgba(146,111,107,0.1)" }}>{m.description}</p>

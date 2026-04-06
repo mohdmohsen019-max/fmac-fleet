@@ -185,7 +185,7 @@ export default function VehiclesPage() {
                 <td className="px-5 py-4 text-sm hidden sm:table-cell" style={{ color: "#5d3f3c" }}>{v.makeAndModel || "—"}</td>
                 <td className="px-5 py-4 text-sm hidden lg:table-cell" style={{ color: "#5d3f3c" }}>{v.lastDrivenBy || "—"}</td>
                 <td className="px-5 py-4 font-mono text-sm hidden lg:table-cell" style={{ color: "#5d3f3c" }}>
-                  {v.currentOdometer.toLocaleString()} km
+                  {v.currentOdometer.toLocaleString()} {t("km")}
                 </td>
                 <td className="px-5 py-4">
                   <select
@@ -247,7 +247,7 @@ export default function VehiclesPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-mono font-bold" style={{ color: "#211b10" }}>{v.currentOdometer.toLocaleString()} km</p>
+                <p className="text-sm font-mono font-bold" style={{ color: "#211b10" }}>{v.currentOdometer.toLocaleString()} {t("km")}</p>
                 <div className="flex justify-end gap-2 mt-2">
                   <button onClick={() => handleEditOdometer(v.id!, v.currentOdometer)} className="p-1" style={{ color: "#5d3f3c" }}><Edit2 size={14} /></button>
                   <button onClick={() => handleDelete(v.id!)} className="p-1" style={{ color: "#5d3f3c" }}><Trash2 size={14} /></button>

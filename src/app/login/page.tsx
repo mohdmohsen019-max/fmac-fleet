@@ -36,7 +36,7 @@ export default function LoginPage() {
       {/* Logo area */}
       <div className="mb-10 text-center">
         <img
-          src="/favicon.png"
+          src="/favicon.png?v=4"
           alt="FMAC"
           className="h-20 w-20 object-contain mx-auto mb-4"
         />

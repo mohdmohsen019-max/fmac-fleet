@@ -78,7 +78,7 @@ export default function DriverDashboard() {
       </div>
 
       <div className="rounded-sm p-6 md:p-8" style={{ backgroundColor: "#ffffff", boxShadow: "0 0 24px -4px rgba(33,27,16,0.04)" }}>
-        <p className="pl-overline mb-1">Form</p>
+        <p className="pl-overline mb-1">{t("form")}</p>
         <h2 className="text-base font-semibold mb-6" style={{ color: "#211b10" }}>{t("trip details")}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -87,7 +87,7 @@ export default function DriverDashboard() {
             <select value={selectedVehicle} onChange={e => setSelectedVehicle(e.target.value)} required
               className={selectCls} style={{ borderColor: "rgba(146,111,107,0.25)" }}>
               <option value="" disabled>{t("select vehicle placeholder")}</option>
-              {vehicles.map(v => <option key={v.id} value={v.id}>{v.plateNumber} ({v.type})</option>)}
+              {vehicles.map(v => <option key={v.id} value={v.id}>{v.plateNumber} ({t(v.type.toLowerCase())})</option>)}
             </select>
           </div>
 
@@ -116,7 +116,7 @@ export default function DriverDashboard() {
           <div className="flex items-center justify-between px-5 py-4 rounded-sm" style={{ backgroundColor: "#f9ecdb" }}>
             <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("calculated distance")}</span>
             <span className="text-2xl font-semibold font-mono" style={{ color: "#211b10" }}>
-              {parseFloat(distance.toFixed(2))} <span className="text-sm font-normal" style={{ color: "#5d3f3c" }}>km</span>
+              {parseFloat(distance.toFixed(2))} <span className="text-sm font-normal" style={{ color: "#5d3f3c" }}>{t("km")}</span>
             </span>
           </div>
 

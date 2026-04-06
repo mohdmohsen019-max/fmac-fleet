@@ -242,9 +242,9 @@ export default function BehaviorPage() {
       return acc;
     }, {} as Record<string, number>);
     return [
-      { name: 'High Risk', value: counts.high || 0, color: RISK_COLORS.high },
-      { name: 'Medium Risk', value: counts.medium || 0, color: RISK_COLORS.medium },
-      { name: 'Low Risk', value: counts.low || 0, color: RISK_COLORS.low }
+      { name: t("high risk label"), value: counts.high || 0, color: RISK_COLORS.high },
+      { name: t("medium risk label"), value: counts.medium || 0, color: RISK_COLORS.medium },
+      { name: t("low risk label"), value: counts.low || 0, color: RISK_COLORS.low }
     ];
   }, [dashboardData]);
 
@@ -326,7 +326,7 @@ export default function BehaviorPage() {
   };
 
   const handleResetFleet = async () => {
-    if (!confirm("☢️ NUCLEAR RESET: This will PERMANENTLY DELETE all vehicles, scorecards, and violations from the database. This action cannot be undone. Proceed?")) return;
+    if (!confirm(t("nuclear reset confirm"))) return;
     
     setCleaning(true);
     try {
@@ -342,7 +342,7 @@ export default function BehaviorPage() {
 
       await Promise.all(deletions);
 
-      alert(`Database wiped. Reset ${deletions.length} records. You can now import fresh data.`);
+      alert(t("db wiped"));
       fetchData();
     } catch (e) {
       console.error(e);
@@ -354,18 +354,18 @@ export default function BehaviorPage() {
 
   const exportData = () => {
     const data = dashboardData.map(d => ({
-      "Vehicle ID": d.plate,
-      "vs Fleet Avg": d.relativeRisk.toFixed(1) + "x",
-      "Risk Score": Math.round(d.riskScore),
-      "Risk Level": d.riskLevel.toUpperCase(),
-      "Alerts/KM": d.alertsPerKm.toFixed(3),
-      "Behavior Rate": (d.behaviorRate * 100).toFixed(1) + "%",
-      "Speeding Index": d.speedingIndex.toFixed(2),
-      "Total KM": d.sKms
+      [t("vehicle plate")]: d.plate,
+      [t("vs fleet avg col")]: d.relativeRisk.toFixed(1) + "x",
+      [t("risk score col")]: Math.round(d.riskScore),
+      [t("risk level")]: d.riskLevel.toUpperCase(),
+      [t("vehicle alerts/km")]: d.alertsPerKm.toFixed(3),
+      [t("behavior rate")]: (d.behaviorRate * 100).toFixed(1) + "%",
+      [t("speeding index")]: d.speedingIndex.toFixed(2),
+      [t("total km")]: d.sKms
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Risk Assessment");
+    XLSX.utils.book_append_sheet(wb, ws, t("risk assessment"));
     XLSX.writeFile(wb, `fmac_recalibrated_risk_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 
@@ -374,22 +374,22 @@ export default function BehaviorPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="pl-overline mb-1">Precise Operational Baseline Assessment</p>
-          <h1 className="text-4xl font-semibold tracking-tight text-[#211b10]">Fleet Risk Intelligence Dashboard</h1>
+          <p className="pl-overline mb-1">{t("precise baseline")}</p>
+          <h1 className="text-4xl font-semibold tracking-tight text-[#211b10]">{t("risk intelligence dashboard")}</h1>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={handleResetFleet} 
             disabled={cleaning}
-            className="btn-secondary text-[#c70017] border-[#c70017]/20 hover:bg-[#c70017]/5 flex items-center gap-2"
+            className="btn-precision bg-white text-[#c70017] border border-[#c70017]/20 hover:bg-[#c70017]/5 flex items-center gap-2"
           >
-             {cleaning ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />} Reset & Clear Data
+             {cleaning ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />} {t("reset & clear data")}
           </button>
           <button onClick={() => setShowUpload(!showUpload)} className="btn-secondary flex items-center gap-2">
-             {showUpload ? <X size={16} /> : <Upload size={16} />} {showUpload ? "Cancel" : "Import Operational Data"}
+             {showUpload ? <X size={16} /> : <Upload size={16} />} {showUpload ? t("cancel") : t("import operational data")}
           </button>
           <button onClick={exportData} className="btn-secondary flex items-center gap-2">
-            <Download size={16} /> Export Detailed Risk
+            <Download size={16} /> {t("export detailed risk")}
           </button>
         </div>
       </div>
@@ -401,21 +401,21 @@ export default function BehaviorPage() {
               <Zap size={24} className="text-[#c70017]" />
             </div>
             <div>
-              <h3 className="text-lg font-bold">Recalibrated Data Ingestion</h3>
-              <p className="text-sm text-[#5d3f3c]">Upload the report to calculate normalized risk scores and relative benchmarks.</p>
+              <h3 className="text-lg font-bold">{t("recalibrated ingestion")}</h3>
+              <p className="text-sm text-[#5d3f3c]">{t("recalibrated desc")}</p>
             </div>
           </div>
           <div className="border-2 border-dashed border-[#926f6b]/20 rounded-sm p-10 text-center hover:border-[#c70017]/40 transition-colors">
             <input type="file" accept=".xls,.xlsx" onChange={handleFileUpload} className="hidden" id="file-upload" />
             <label htmlFor="file-upload" className="cursor-pointer">
               <Upload size={32} className="mx-auto mb-4 text-[#a8a29e]" />
-              <p className="text-sm font-semibold text-[#211b10]">Click to select the report file</p>
-              <p className="text-xs text-[#a8a29e] mt-1">Normalizes metrics to 0-1 range based on industry benchmarks.</p>
+              <p className="text-sm font-semibold text-[#211b10]">{t("click to select report")}</p>
+              <p className="text-xs text-[#a8a29e] mt-1">{t("normalization info")}</p>
             </label>
           </div>
           {uploading && (
             <div className="mt-4 flex items-center justify-center gap-2 text-sm font-bold text-[#c70017]">
-               <Loader2 size={16} className="animate-spin" /> Normalizing fleet intelligence...
+               <Loader2 size={16} className="animate-spin" /> {t("normalizing")}
             </div>
           )}
         </div>
@@ -424,10 +424,10 @@ export default function BehaviorPage() {
       {/* Stats Summary Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Fleet KM Tracking", val: stats.totalKm.toFixed(0), sub: "Operational Range", icon: <Activity size={18} />, hint: "Total distance traveled by the fleet in the current reporting period." },
-          { label: "Fleet Intensity Index", val: stats.avgAlertsPerKm.toFixed(3), sub: "Industry Baseline: 0.450", icon: <TrendingUp size={18} />, hint: "Average alerts per 1 KM. Lower is safer. Baseline is 0.450." },
-          { label: "Active Risk Units", val: stats.highRisk, sub: "Threshold: 75+", icon: <Shield size={18} />, highlight: stats.highRisk > 0, hint: "Number of vehicles currently exceeding the 75+ risk score threshold." },
-          { label: "Operational Vehicles", val: stats.total, sub: "Data Integrity", icon: <Zap size={18} />, hint: "Total number of vehicles detected and tracked in the operational data." }
+          { label: t("fleet km tracking"), val: stats.totalKm.toFixed(0), sub: t("operational range"), icon: <Activity size={18} />, hint: t("hint km tracking") },
+          { label: t("fleet intensity index"), val: stats.avgAlertsPerKm.toFixed(3), sub: t("industry baseline"), icon: <TrendingUp size={18} />, hint: t("hint intensity") },
+          { label: t("active risk units"), val: stats.highRisk, sub: t("threshold"), icon: <Shield size={18} />, highlight: stats.highRisk > 0, hint: t("hint risk units") },
+          { label: t("operational vehicles"), val: stats.total, sub: t("data integrity"), icon: <Zap size={18} />, hint: t("hint operational") }
         ].map((kpi, i) => (
           <IntelligenceTooltip key={i} title={kpi.label} text={kpi.hint}>
             <div className={`p-6 h-full rounded-sm bg-white border ${kpi.highlight ? 'border-[#c70017]/30 ring-1 ring-[#c70017]/10' : 'border-[#926f6b]/10'} transition-all hover:border-[#c70017]/20`}>
@@ -446,10 +446,10 @@ export default function BehaviorPage() {
       {/* Visual Intelligence Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Risk Score Histogram */}
-        <IntelligenceTooltip title="Risk Distribution Spread" text="Percentage breakdown of the fleet categorized by risk levels (High, Medium, Low).">
+        <IntelligenceTooltip title={t("risk distribution")} text={t("hint distribution")}>
           <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col hover:border-[#c70017]/20 transition-all">
             <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
-              <PieIcon size={14} /> Risk Distribution Spread
+              <PieIcon size={14} /> {t("risk distribution")}
             </h3>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -474,10 +474,10 @@ export default function BehaviorPage() {
         </IntelligenceTooltip>
 
         {/* Alerts/km vs Average */}
-        <IntelligenceTooltip title="Intensity vs Fleet Average" text="Comparison of individual vehicles against the overall fleet average of 0.393 Alerts/KM.">
+        <IntelligenceTooltip title={t("intensity vs fleet avg")} text={t("hint intensity vs avg")}>
           <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col hover:border-[#c70017]/20 transition-all">
             <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
-              <BarChart3 size={14} /> Intensity vs Fleet Average
+              <BarChart3 size={14} /> {t("intensity vs fleet avg")}
             </h3>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={benchmarkData}>
@@ -486,18 +486,18 @@ export default function BehaviorPage() {
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
                 <ReTooltip cursor={{ fill: '#f9ecdb' }} />
                 <Legend />
-                <Bar dataKey="vehicle" name="Vehicle Alerts/KM" fill="#c70017" barSize={15} />
-                <Bar dataKey="fleet" name="Fleet Average" fill="#a8a29e" barSize={15} />
+                <Bar dataKey="vehicle" name={t("vehicle alerts/km")} fill="#c70017" barSize={15} />
+                <Bar dataKey="fleet" name={t("fleet average label")} fill="#a8a29e" barSize={15} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </IntelligenceTooltip>
 
         {/* Top Risk Vehicles */}
-        <IntelligenceTooltip title="Top 5 Risk Offenders" text="The 5 fleet units with the highest aggregate risk scores across all performance vectors.">
+        <IntelligenceTooltip title={t("risk offenders")} text={t("hint offenders")}>
           <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col hover:border-[#c70017]/20 transition-all">
             <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2 text-[#c70017]">
-              <TrendingUp size={14} /> Top 5 Risk Offenders
+              <TrendingUp size={14} /> {t("risk offenders")}
             </h3>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topBottomData.top} layout="vertical">
@@ -512,10 +512,10 @@ export default function BehaviorPage() {
         </IntelligenceTooltip>
 
         {/* Bottom Risk Vehicles */}
-        <IntelligenceTooltip title="Top 5 Safety Leaders" text="The 5 fleet units demonstrating the most consistent safety performance and lowest risk scores.">
+        <IntelligenceTooltip title={t("safety leaders")} text={t("hint leaders")}>
           <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col hover:border-[#10b981]/20 transition-all">
             <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2 text-[#10b981]">
-              <Shield size={14} /> Top 5 Safety Leaders
+              <Shield size={14} /> {t("safety leaders")}
             </h3>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topBottomData.bottom} layout="vertical">
@@ -537,7 +537,7 @@ export default function BehaviorPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a8a29e]" size={16} />
             <input 
               type="text" 
-              placeholder="Filter fleet..." 
+              placeholder={t("Filter fleet...")} 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-[#f9ecdb]/20 border border-transparent focus:border-[#c70017]/20 rounded-sm outline-none text-sm"
@@ -548,10 +548,10 @@ export default function BehaviorPage() {
               onChange={e => setRiskFilter(e.target.value)}
               className="bg-transparent text-xs font-black uppercase outline-none cursor-pointer text-[#a8a29e]"
             >
-              <option value="all">Global Fleet</option>
-              <option value="high">🔴 High Focus</option>
-              <option value="medium">🟡 Watchlist</option>
-              <option value="low">⚪ Baseline</option>
+              <option value="all">{t("global fleet")}</option>
+              <option value="high">🔴 {t("high focus")}</option>
+              <option value="medium">🟡 {t("watchlist")}</option>
+              <option value="low">⚪ {t("baseline")}</option>
           </select>
         </div>
 
@@ -561,15 +561,15 @@ export default function BehaviorPage() {
               <thead>
                 <tr className="bg-[#f9ecdb]">
                   {[
-                    { label: "Vehicle / Plate", key: "plate", align: "left" },
-                    { label: "vs Fleet Avg", key: "relativeRisk", align: "center", highlight: true },
-                    { label: "Risk Score", key: "riskScore", align: "right" },
-                    { label: "Status", key: "riskLevel", align: "center" },
-                    { label: "Alerts/km", key: "alertsPerKm", align: "right" },
-                    { label: "Behavior", key: "behaviorRate", align: "center" },
-                    { label: "Speed Index", key: "speedingIndex", align: "center" },
-                    { label: "Idle Ratio", key: "idleRatio", align: "center" },
-                    { label: "KM", key: "sKms", align: "right" }
+                    { label: t("vehicle plate"), key: "plate", align: "left" },
+                    { label: t("vs fleet avg col"), key: "relativeRisk", align: "center", highlight: true },
+                    { label: t("risk score col"), key: "riskScore", align: "right" },
+                    { label: t("status indicator"), key: "riskLevel", align: "center" },
+                    { label: t("vehicle alerts/km"), key: "alertsPerKm", align: "right" },
+                    { label: t("behavior rate"), key: "behaviorRate", align: "center" },
+                    { label: t("speeding index"), key: "speedingIndex", align: "center" },
+                    { label: t("idle ratio"), key: "idleRatio", align: "center" },
+                    { label: t("km"), key: "sKms", align: "right" }
                   ].map((col, i) => (
                     <th 
                       key={i} 
@@ -590,12 +590,12 @@ export default function BehaviorPage() {
               </thead>
               <tbody className="divide-y divide-[#926f6b]/5 text-sm">
                 {loading ? (
-                  <tr><td colSpan={9} className="py-24 text-center text-[#a8a29e]">Syncing Recalibrated Analysis...</td></tr>
+                  <tr><td colSpan={9} className="py-24 text-center text-[#a8a29e]">{t("syncing recalibrated")}</td></tr>
                 ) : dashboardData.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-24 text-center">
-                       <p className="text-lg font-semibold text-[#5d3f3c]">Operational Database Empty</p>
-                       <p className="text-sm text-[#a8a29e]">Import a the Risk Report to generate insights.</p>
+                       <p className="text-lg font-semibold text-[#5d3f3c]">{t("db empty")}</p>
+                       <p className="text-sm text-[#a8a29e]">{t("import risk report")}</p>
                     </td>
                   </tr>
                 ) : (
@@ -609,7 +609,7 @@ export default function BehaviorPage() {
                       </td>
                       <td className="px-4 py-4 text-center">
                         <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${d.relativeRisk > 1.2 ? 'bg-[#c70017]/10 text-[#c70017]' : d.relativeRisk < 0.8 ? 'bg-[#10b981]/10 text-[#10b981]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
-                          {d.relativeRisk.toFixed(1)}x {d.relativeRisk > 1 ? "Worse" : "Better"}
+                          {d.relativeRisk.toFixed(1)}x {d.relativeRisk > 1 ? t("worse") : t("better")}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-right">

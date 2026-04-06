@@ -26,7 +26,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-3 mt-px" style={{ borderTop: "1px solid rgba(146,111,107,0.1)" }}>
       <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold uppercase" style={{ color: "#5d3f3c" }}>Rows</span>
+        <span className="text-xs font-semibold uppercase" style={{ color: "#5d3f3c" }}>{t("rows")}</span>
         <select
           value={pageSize} onChange={e => { onPageSize(Number(e.target.value)); onPage(1); }}
           className={selectCls} style={{ borderColor: "rgba(146,111,107,0.2)" }}
@@ -35,7 +35,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
         </select>
       </div>
       <div className="flex items-center gap-3 text-xs" style={{ color: "#5d3f3c" }}>
-        <span>{total === 0 ? "0" : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}</span>
+        <span>{total === 0 ? "0" : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} {t("of")} {total}</span>
         <button
           className="p-1.5 rounded transition-colors disabled:opacity-30"
           style={{ backgroundColor: "#ede1cf" }}
@@ -176,7 +176,7 @@ export default function ReportsPage() {
           <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("reports exports")}</h1>
         </div>
         <button onClick={fetchAll} disabled={loading} className="btn-secondary flex items-center gap-1.5 self-start sm:self-auto">
-          <RefreshCcw size={12} className={loading ? "animate-spin" : ""} /> Refresh
+          <RefreshCcw size={12} className={loading ? "animate-spin" : ""} /> {t("refresh")}
         </button>
       </div>
 
@@ -301,7 +301,7 @@ export default function ReportsPage() {
                       </td>
                       <td className="px-5 py-4 text-xs font-mono text-right hidden lg:table-cell" style={{ color: "#5d3f3c" }}>{trip.startOdometer.toLocaleString()}</td>
                       <td className="px-5 py-4 text-xs font-mono text-right hidden lg:table-cell" style={{ color: "#5d3f3c" }}>{trip.endOdometer.toLocaleString()}</td>
-                      <td className="px-5 py-4 text-sm font-mono font-semibold text-right whitespace-nowrap" style={{ color: "#211b10" }}>{trip.distance} km</td>
+                      <td className="px-5 py-4 text-sm font-mono font-semibold text-right whitespace-nowrap" style={{ color: "#211b10" }}>{trip.distance} {t("km")}</td>
                     </tr>
                   );
                 })}
@@ -333,7 +333,7 @@ export default function ReportsPage() {
                       backgroundColor: trip.tripType === "Internal" ? "rgba(0,75,140,0.08)" : "#ede1cf",
                       color: trip.tripType === "Internal" ? "#004b8c" : "#5d3f3c",
                     }}>{trip.tripType}</span>
-                    <span className="text-xs" style={{ color: "#a8a29e" }}>{trip.startOdometer.toLocaleString()} → {trip.endOdometer.toLocaleString()} km</span>
+                    <span className="text-xs" style={{ color: "#a8a29e" }}>{trip.startOdometer.toLocaleString()} → {trip.endOdometer.toLocaleString()} {t("km")}</span>
                   </div>
                 </div>
               );

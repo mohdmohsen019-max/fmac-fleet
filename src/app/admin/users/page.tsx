@@ -122,7 +122,7 @@ export default function AdminUsersPage() {
                           <button
                             onClick={() => handleToggleRole(u.uid, u.role)}
                             className="p-1.5 rounded transition-colors"
-                            title={u.role === "admin" ? "Demote" : "Promote"}
+                            title={u.role === "admin" ? t("demote") : t("promote")}
                             style={{ color: "#5d3f3c" }}
                             onMouseEnter={e => (e.currentTarget.style.color = "#c70017")}
                             onMouseLeave={e => (e.currentTarget.style.color = "#5d3f3c")}

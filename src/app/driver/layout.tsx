@@ -22,7 +22,7 @@ export default function DriverLayout({
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
-              <img src="/fmac-logo.png" alt="FMAC" className="h-7 w-auto object-contain" />
+              <img src="/fmac-logo.png?v=4" alt="FMAC" className="h-7 w-auto object-contain" />
               <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.2em]" style={{ color: "#a8a29e" }}>Fleet Management</span>
             </div>
             <p className="text-[0.6875rem] font-medium" style={{ color: "#a8a29e" }}>

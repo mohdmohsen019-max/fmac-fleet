@@ -51,7 +51,7 @@ export default function AdminDashboard() {
     const dist = trips
       .filter(t => format((t.date as any).toDate(), "MMM dd") === dayStr)
       .reduce((acc, t) => acc + t.distance, 0);
-    return { name: format(d, "EEE").toUpperCase(), distance: dist };
+    return { name: t(format(d, "eee").toLowerCase()), distance: dist };
   });
 
   const recentActivity = [...trips, ...maintenance]
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-none truncate" style={{ color: "#211b10" }}>
-                      {isTrip ? `${t("trip logged")} — ${(item as Trip).distance} km` : t("maintenance recorded")}
+                      {isTrip ? `${t("trip logged")} — ${(item as Trip).distance} ${t("km")}` : t("maintenance recorded")}
                     </p>
                     <p className="text-[0.6875rem] mt-1 font-mono" style={{ color: "#5d3f3c" }}>
                       {v ? v.plateNumber : t("unknown vehicle")} · {format((item.createdAt as any).toDate(), "MMM dd, HH:mm")}
