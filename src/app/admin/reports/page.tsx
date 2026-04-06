@@ -22,6 +22,7 @@ function Pagination({ total, page, pageSize, onPage, onPageSize }: {
   total: number; page: number; pageSize: number;
   onPage: (p: number) => void; onPageSize: (n: number) => void;
 }) {
+  const { t } = useLanguage();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-3 mt-px" style={{ borderTop: "1px solid rgba(146,111,107,0.1)" }}>
