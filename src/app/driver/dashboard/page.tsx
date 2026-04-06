@@ -103,12 +103,7 @@ export default function DriverDashboard() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("start odometer")}</label>
-              <Input type="number" value={startOdometer} onChange={e => {
-                const val = Number(e.target.value);
-                setStartOdometer(val);
-                setEndOdometer(prev => Math.max(prev, val));
-              }} 
-              className={inputCls} style={{ borderColor: "rgba(146,111,107,0.25)" }} />
+              <Input value={startOdometer} readOnly className={inputCls} style={{ borderColor: "rgba(146,111,107,0.15)", backgroundColor: "#fff8f2" }} />
             </div>
             <div>
               <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("end odometer")}</label>

@@ -64,9 +64,8 @@ export const logTrip = async (
 
     const currentOdometer = vehicleDoc.data().currentOdometer;
 
-    if (startOdometer < currentOdometer - 50) {
-      // Allow minor downward corrections if needed, but prevent total zeroing by accident
-      throw new Error(`Start odometer too low (Vehicle: ${currentOdometer}, Entered: ${startOdometer}). Manual correction is limited to -50km for safety.`);
+    if (startOdometer < currentOdometer) {
+      throw new Error("Start odometer is lower than vehicle's current recorded odometer.");
     }
 
     const tripData: Omit<Trip, "id"> = {
