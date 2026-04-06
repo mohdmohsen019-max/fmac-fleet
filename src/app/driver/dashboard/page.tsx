@@ -103,11 +103,11 @@ export default function DriverDashboard() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("start odometer")}</label>
-              <Input value={startOdometer} readOnly className={inputCls} style={{ borderColor: "rgba(146,111,107,0.15)", backgroundColor: "#fff8f2" }} />
+              <Input type="number" step="any" value={startOdometer} readOnly className={inputCls} style={{ borderColor: "rgba(146,111,107,0.15)", backgroundColor: "#fff8f2" }} />
             </div>
             <div>
               <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("end odometer")}</label>
-              <Input type="number" min={startOdometer} value={endOdometer} onChange={e => setEndOdometer(Number(e.target.value))} required
+              <Input type="number" step="any" min={startOdometer} value={endOdometer} onChange={e => setEndOdometer(Number(e.target.value))} required
                 className={inputCls} style={{ borderColor: "rgba(146,111,107,0.25)" }} />
             </div>
           </div>
@@ -116,7 +116,7 @@ export default function DriverDashboard() {
           <div className="flex items-center justify-between px-5 py-4 rounded-sm" style={{ backgroundColor: "#f9ecdb" }}>
             <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("calculated distance")}</span>
             <span className="text-2xl font-semibold font-mono" style={{ color: "#211b10" }}>
-              {distance} <span className="text-sm font-normal" style={{ color: "#5d3f3c" }}>km</span>
+              {parseFloat(distance.toFixed(2))} <span className="text-sm font-normal" style={{ color: "#5d3f3c" }}>km</span>
             </span>
           </div>
 
