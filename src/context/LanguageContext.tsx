@@ -26,9 +26,18 @@ const translations: Record<Language, Record<string, string>> = {
     maintenance: "Maintenance",
     reports: "Reports",
     behavior: "Behavior Monitoring",
+    "fleet behavior intelligence": "Fleet Behavior Intelligence",
     "risk management": "Risk Management",
     settings: "Settings",
     "sign out": "Sign out",
+    // Violation Types (AI Report)
+    "Seat Belt": "Seat Belt",
+    "Fatigue": "Fatigue",
+    "Distraction": "Distraction",
+    "Forward Warning Collision": "Forward Warning Collision",
+    "Yawning": "Yawning",
+    "Calling": "Calling",
+    "Smoking": "Smoking",
     // FMAC branding — never translated
     "fmac fleet": "FMAC Fleet",
 
@@ -348,9 +357,18 @@ const translations: Record<Language, Record<string, string>> = {
     maintenance: "الصيانة",
     reports: "التقارير",
     behavior: "مراقبة سلوك القيادة",
+    "fleet behavior intelligence": "ذكاء سلوك الأسطول",
     "risk management": "إدارة المخاطر",
     settings: "الإعدادات",
     "sign out": "تسجيل الخروج",
+    // Violation Types (AI Report)
+    "Seat Belt": "حزام الأمان",
+    "Fatigue": "الإرهاق",
+    "Distraction": "تشتت الانتباه",
+    "Forward Warning Collision": "تحذير اصطدام أمامي",
+    "Yawning": "التثاؤب",
+    "Calling": "الاتصال بالهاتف",
+    "Smoking": "التدخين",
     "fmac fleet": "FMAC Fleet",
 
     // Language
@@ -860,9 +878,15 @@ const translations: Record<Language, Record<string, string>> = {
     "failed export": "برآمد ناکام ہوا۔",
     download: "ڈاؤن لوڈ",
 
-    // Behavior (Risk Management)
+    // Violation Types (AI Report)
+    "Seat Belt": "سیٹ بیلٹ",
+    "Fatigue": "تھکاوٹ",
+    "Distraction": "توجہ ہٹانا",
+    "Forward Warning Collision": "آگے تصادم کی وارننگ",
+    "Yawning": "جمائی",
+    "Calling": "کال کرنا",
+    "Smoking": "تمباکو نوشی",
     "behavior desc": "گاڑی چلانے کی کارکردگی اور حفاظتی معلومات۔",
-    "fleet behavior": "اسطول کے رویے کی معلومات",
     scoreboard: "وہیکل اسکور بورڈ",
     score: "اسکور",
     "total km": "کل کلومیٹر",

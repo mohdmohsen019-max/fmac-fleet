@@ -11,7 +11,7 @@ export default function AdminLayout({
     <ProtectedRoute allowedRoles={["admin"]}>
       <div className="min-h-screen" style={{ backgroundColor: "#fff8f2" }}>
         <TopNav mode="admin" />
-        <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-10">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
           <PageTransition>
             {children}
           </PageTransition>

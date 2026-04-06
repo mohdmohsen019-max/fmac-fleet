@@ -93,9 +93,9 @@ export default function VehiclesPage() {
 
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <p className="pl-overline mb-1">{t("fleet vehicles desc")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("fleet vehicles")}</h1>
+        <div className="min-w-0">
+          <p className="pl-overline mb-1 leading-tight truncate">{t("fleet vehicles desc")}</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight break-words" style={{ color: "#211b10" }}>{t("fleet vehicles")}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button

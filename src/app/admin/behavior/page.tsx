@@ -180,9 +180,9 @@ const ViolationTimeline = ({ isOpen, onClose, vehicle, violations }: any) => {
                     <div className="absolute left-0 top-1.5 w-[23px] h-[23px] rounded-full border-2 border-white bg-[#c70017] flex items-center justify-center shadow-lg" />
                     
                     <div className="bg-white p-4 rounded-sm border border-[#926f6b]/10 shadow-sm hover:border-[#c70017]/20 transition-all cursor-default">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#c70017]">{v.type}</span>
-                        <div className="flex flex-col items-end">
+                      <div className="flex justify-between items-start mb-2 gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#c70017]">{t(v.type)}</span>
+                        <div className="flex flex-col items-end shrink-0">
                           <span className="text-xs font-bold text-[#211b10]">{format(v.date.toDate(), "dd MMM, yyyy")}</span>
                           <span className="text-[10px] text-[#a8a29e] font-medium">{format(v.date.toDate(), "HH:mm:ss")}</span>
                         </div>
@@ -456,9 +456,9 @@ export default function BehaviorMonitoringPage() {
       />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <p className="pl-overline mb-1">{t("behavior monitoring")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight text-[#211b10]">{t("fleet behavior intelligence")}</h1>
+        <div className="min-w-0">
+          <p className="pl-overline mb-1 leading-tight truncate">{t("behavior monitoring")}</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-[#211b10] break-words">{t("fleet behavior intelligence")}</h1>
         </div>
         <div className="flex items-center gap-3">
           <button 
@@ -536,7 +536,7 @@ export default function BehaviorMonitoringPage() {
         />
         <IndicatorCard 
           title={t("lead offense") || "Lead Offense"} 
-          value={kpis.leadOffense} 
+          value={t(kpis.leadOffense)} 
           subValue={t("most frequent violation") || "Most common violation"}
           icon={<Zap size={20} />}
         />
@@ -583,30 +583,35 @@ export default function BehaviorMonitoringPage() {
         </div>
 
         {/* Distribution Chart */}
-        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[400px] flex flex-col">
-          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
-            <PieIcon size={14} /> {t("violation distribution") || "Violation Type Distribution"}
-          </h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={typeDistribution}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {typeDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <ReTooltip />
-              <Legend verticalAlign="bottom" align="center" iconType="circle" wrapperStyle={{ fontSize: 10 }} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+          <div className="h-[300px] md:h-[400px] flex flex-col">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={typeDistribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {typeDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <ReTooltip 
+                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #926f6b20', borderRadius: '4px', fontSize: '10px' }}
+                   formatter={(val: any, name: any) => [val, t(name || "")]}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  align="center" 
+                  iconType="circle" 
+                  formatter={(value) => <span className="text-[10px] font-bold text-[#5d3f3c]">{t(value)}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
       </div>
 
       {/* Aggregated Violations Table */}
@@ -628,8 +633,8 @@ export default function BehaviorMonitoringPage() {
         </div>
 
         <div className="rounded-sm overflow-hidden bg-white border border-[#926f6b]/10 shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200">
+            <table className="w-full border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-[#f9ecdb]">
                   <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-[#5d3f3c]">{t("vehicle info") || "Vehicle Information"}</th>
@@ -666,8 +671,8 @@ export default function BehaviorMonitoringPage() {
                       <td className="px-6 py-5">
                         <div className="flex flex-wrap gap-2">
                           {Object.entries(d.violations).map(([type, count], idx) => (
-                            <div key={idx} className="flex items-center gap-1.5 px-2 py-1 rounded-sm bg-[#211b10]/5 group-hover:bg-white border border-transparent group-hover:border-[#c70017]/10 transition-colors">
-                              <span className="text-[10px] font-black text-[#5d3f3c]">{type}</span>
+                            <div key={idx} className="flex items-center gap-1.5 px-2 py-1 rounded-sm bg-[#211b10]/5 group-hover:bg-white border border-transparent group-hover:border-[#c70017]/10 transition-colors shrink-0">
+                              <span className="text-[10px] font-black text-[#5d3f3c]">{t(type)}</span>
                               <span className={`text-[10px] font-black px-1.5 rounded-full ${count > 3 ? 'bg-[#c70017] text-white' : 'bg-[#f9ecdb] text-[#c70017]'}`}>
                                 {count}
                               </span>

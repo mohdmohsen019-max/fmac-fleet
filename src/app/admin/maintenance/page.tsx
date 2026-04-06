@@ -86,9 +86,9 @@ export default function MaintenancePage() {
 
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <p className="pl-overline mb-1">{t("maintenance records desc")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("maintenance records")}</h1>
+        <div className="min-w-0">
+          <p className="pl-overline mb-1 leading-tight truncate">{t("maintenance records desc")}</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight break-words" style={{ color: "#211b10" }}>{t("maintenance records")}</h1>
         </div>
         {/* View toggle */}
         <div className="flex items-center gap-1 p-1 rounded-sm self-start sm:self-auto" style={{ backgroundColor: "#f9ecdb" }}>
@@ -119,20 +119,20 @@ export default function MaintenancePage() {
 
       {/* ── Stats Strip ── */}
       {view === "logs" && (
-        <div className="grid grid-cols-2 lg:flex lg:items-end gap-4 lg:gap-x-14">
-          <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-            <span className="text-3xl font-semibold leading-none" style={{ color: "#211b10" }}>{maintenance.length}</span>
-            <p className="pl-overline mt-2">{t("maintenance logs")}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-end gap-4 lg:gap-x-14">
+          <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none bg-[#000000]/[0.02] lg:bg-transparent">
+            <span className="text-2xl sm:text-3xl font-semibold leading-none tracking-tight" style={{ color: "#211b10" }}>{maintenance.length}</span>
+            <p className="pl-overline mt-2 truncate">{t("maintenance logs")}</p>
           </div>
-          <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-            <span className="text-3xl font-semibold leading-none" style={{ color: "#211b10" }}>{thisMonth}</span>
-            <p className="pl-overline mt-2">{t("this month")}</p>
+          <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none bg-[#000000]/[0.02] lg:bg-transparent">
+            <span className="text-2xl sm:text-3xl font-semibold leading-none tracking-tight" style={{ color: "#211b10" }}>{thisMonth}</span>
+            <p className="pl-overline mt-2 truncate">{t("this month")}</p>
           </div>
-          <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none col-span-2 lg:col-span-1" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-            <span className="text-3xl font-semibold leading-none" style={{ color: "#c70017" }}>
+          <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none bg-[#000000]/[0.02] lg:bg-transparent sm:col-span-2 lg:col-span-1">
+            <span className="text-2xl sm:text-3xl font-semibold leading-none tracking-tight" style={{ color: "#c70017" }}>
               {totalCost > 0 ? `${t("aed")} ${totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—"}
             </span>
-            <p className="pl-overline mt-2">{t("total cost")}</p>
+            <p className="pl-overline mt-2 truncate">{t("total cost")}</p>
           </div>
         </div>
       )}

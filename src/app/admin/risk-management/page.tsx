@@ -373,9 +373,9 @@ export default function RiskManagementPage() {
     <div className="space-y-8 pb-12">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <p className="pl-overline mb-1">{t("precise baseline")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight text-[#211b10]">{t("risk intelligence dashboard")}</h1>
+        <div className="min-w-0">
+          <p className="pl-overline mb-1 leading-tight truncate">{t("precise baseline")}</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-[#211b10] break-words">{t("risk intelligence dashboard")}</h1>
         </div>
         <div className="flex items-center gap-3">
           <button 
@@ -430,12 +430,12 @@ export default function RiskManagementPage() {
           { label: t("operational vehicles"), val: stats.total, sub: t("data integrity"), icon: <Zap size={18} />, hint: t("hint operational") }
         ].map((kpi, i) => (
           <IntelligenceTooltip key={i} title={kpi.label} text={kpi.hint}>
-            <div className={`p-6 h-full rounded-sm bg-white border ${kpi.highlight ? 'border-[#c70017]/30 ring-1 ring-[#c70017]/10' : 'border-[#926f6b]/10'} transition-all hover:border-[#c70017]/20`}>
-              <p className="pl-overline mb-2 text-[#a8a29e]">{kpi.label}</p>
+            <div className={`p-4 md:p-6 h-full rounded-sm bg-white border ${kpi.highlight ? 'border-[#c70017]/30 ring-1 ring-[#c70017]/10' : 'border-[#926f6b]/10'} transition-all hover:border-[#c70017]/20`}>
+              <p className="pl-overline mb-2 text-[#a8a29e] truncate">{kpi.label}</p>
               <div className="flex items-baseline gap-2">
-                <span className={`text-3xl font-semibold tracking-tight ${kpi.highlight ? 'text-[#c70017]' : 'text-[#211b10]'}`}>{kpi.val}</span>
+                <span className={`text-2xl md:text-3xl font-semibold tracking-tight ${kpi.highlight ? 'text-[#c70017]' : 'text-[#211b10]'}`}>{kpi.val}</span>
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-widest mt-4 flex items-center gap-2 text-[#a8a29e]">
+              <p className="text-[10px] font-bold uppercase tracking-widest mt-4 flex items-center gap-2 text-[#a8a29e] truncate">
                 {kpi.icon} {kpi.sub}
               </p>
             </div>
@@ -556,12 +556,12 @@ export default function RiskManagementPage() {
         </div>
 
         <div className="rounded-sm overflow-hidden bg-white border border-[#926f6b]/10 shadow-sm">
-          <div className="overflow-x-auto min-h-[400px]">
-            <table className="w-full border-collapse">
+          <div className="overflow-x-auto min-h-[400px] scrollbar-thin scrollbar-thumb-gray-200">
+            <table className="w-full border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-[#f9ecdb]">
                   {[
-                    { label: t("vehicle plate"), key: "plate", align: "left" },
+                    { label: t("vehicle plate"), key: "plate", align: "left", sticky: true },
                     { label: t("vs fleet avg col"), key: "relativeRisk", align: "center", highlight: true },
                     { label: t("risk score col"), key: "riskScore", align: "right" },
                     { label: t("status indicator"), key: "riskLevel", align: "center" },
@@ -573,7 +573,7 @@ export default function RiskManagementPage() {
                   ].map((col, i) => (
                     <th 
                       key={i} 
-                      className="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest cursor-pointer hover:bg-[#ede1cf]"
+                      className={`px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest cursor-pointer hover:bg-[#ede1cf] transition-colors ${col.sticky ? 'sticky left-0 z-20 bg-[#f9ecdb] shadow-[1px_0_0_rgba(146,111,107,0.1)]' : ''}`}
                       onClick={() => handleSort(col.key)}
                     >
                       <div className={`flex items-center gap-1 ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'} ${col.highlight ? 'text-[#c70017]' : ''}`}>
@@ -590,7 +590,7 @@ export default function RiskManagementPage() {
               </thead>
               <tbody className="divide-y divide-[#926f6b]/5 text-sm">
                 {loading ? (
-                  <tr><td colSpan={9} className="py-24 text-center text-[#a8a29e]">{t("syncing recalibrated")}</td></tr>
+                  <tr><td colSpan={9} className="py-24 text-center text-[#a8a29e] font-medium">{t("syncing recalibrated")}</td></tr>
                 ) : dashboardData.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-24 text-center">
@@ -601,10 +601,10 @@ export default function RiskManagementPage() {
                 ) : (
                   dashboardData.map((d, i) => (
                     <tr key={i} className="hover:bg-[#fff8f2] transition-colors group cursor-default">
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-4 sticky left-0 z-10 bg-inherit group-hover:bg-[#fff8f2] transition-colors shadow-[1px_0_0_rgba(146,111,107,0.1)]">
                         <div className="flex flex-col">
                           <span className="font-bold text-[#211b10]">{d.plate}</span>
-                          <span className="text-[10px] text-[#a8a29e] font-medium">{d.vehicleName}</span>
+                          <span className="text-[10px] text-[#a8a29e] font-medium truncate max-w-[120px]">{d.vehicleName}</span>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">

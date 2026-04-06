@@ -69,37 +69,37 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 lg:flex lg:items-end gap-4 lg:gap-x-14">
 
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-            <span className="text-4xl font-semibold leading-none tracking-tight" style={{ color: "#211b10" }}>
+            <span className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-none tracking-tight" style={{ color: "#211b10" }}>
               {vehicles.length}
             </span>
-            <span className="pl-overline mt-2">{t("total vehicles")}</span>
+            <span className="pl-overline mt-2 truncate">{t("total vehicles")}</span>
           </div>
 
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-            <span className="text-4xl font-semibold leading-none tracking-tight" style={{ color: "#16a34a" }}>
+            <span className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-none tracking-tight" style={{ color: "#16a34a" }}>
               {activeVehicles}
             </span>
-            <span className="pl-overline mt-2">{t("vehicles active")}</span>
+            <span className="pl-overline mt-2 truncate">{t("vehicles active")}</span>
           </div>
 
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
             <div className="flex items-center gap-2">
-              <span className="text-4xl font-semibold leading-none tracking-tight" style={{ color: vehiclesNeedingService > 0 ? "#c70017" : "#211b10" }}>
+              <span className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-none tracking-tight" style={{ color: vehiclesNeedingService > 0 ? "#c70017" : "#211b10" }}>
                 {vehiclesNeedingService}
               </span>
               {vehiclesNeedingService > 0 && (
                 <span className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ backgroundColor: "#c70017" }} />
               )}
             </div>
-            <span className="pl-overline mt-2">{t("in maintenance count")}</span>
+            <span className="pl-overline mt-2 truncate">{t("in maintenance count")}</span>
           </div>
 
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
-            <span className="text-4xl font-semibold leading-none tracking-tight" style={{ color: "#211b10" }}>
+            <span className="text-2xl sm:text-3xl md:text-4xl font-semibold leading-none tracking-tight" style={{ color: "#211b10" }}>
               {totalDistance7D.toLocaleString()}
-              <span className="text-lg font-medium ms-1" style={{ color: "#5d3f3c" }}>km</span>
+              <span className="text-base sm:text-lg font-medium ms-1" style={{ color: "#5d3f3c" }}>km</span>
             </span>
-            <span className="pl-overline mt-2">{t("distance 7d")}</span>
+            <span className="pl-overline mt-2 truncate">{t("distance 7d")}</span>
           </div>
 
         </div>
@@ -197,16 +197,16 @@ export default function AdminDashboard() {
       {/* ── Fleet Utilization strip ── */}
       <section>
         <p className="pl-overline mb-6">{t("fleet vehicles")}</p>
-        <div className="grid grid-cols-3 gap-3 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {[
             { label: t("active"), value: activeVehicles, total: vehicles.length, color: "#16a34a" },
             { label: t("in maintenance count"), value: vehiclesNeedingService, total: vehicles.length, color: "#c70017" },
             { label: t("out of service count"), value: outOfService, total: vehicles.length, color: "#a8a29e" },
           ].map(({ label, value, total, color }) => (
-            <div key={label} className="p-4 md:p-6 rounded-sm" style={{ backgroundColor: "#f9ecdb" }}>
-              <p className="pl-overline truncate">{label}</p>
-              <p className="text-3xl md:text-4xl font-semibold mt-2 leading-none" style={{ color }}>{value}</p>
-              <div className="mt-3 h-0.5 rounded-full overflow-hidden" style={{ backgroundColor: "#ede1cf" }}>
+            <div key={label} className="p-4 md:p-6 rounded-sm bg-[#f9ecdb]">
+              <p className="pl-overline truncate leading-tight">{label}</p>
+              <p className="text-2xl md:text-3xl lg:text-4xl font-semibold mt-2 leading-none" style={{ color }}>{value}</p>
+              <div className="mt-3 h-0.5 rounded-full overflow-hidden bg-[#ede1cf]">
                 <div
                   className="h-full transition-all duration-500"
                   style={{

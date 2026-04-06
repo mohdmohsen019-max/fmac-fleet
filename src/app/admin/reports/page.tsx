@@ -172,9 +172,9 @@ export default function ReportsPage() {
     <div className="space-y-10">
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <p className="pl-overline mb-1">{t("reports desc")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("reports exports")}</h1>
+        <div className="min-w-0">
+          <p className="pl-overline mb-1 leading-tight truncate">{t("reports desc")}</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight break-words" style={{ color: "#211b10" }}>{t("reports exports")}</h1>
         </div>
         <button onClick={fetchAll} disabled={loading} className="btn-secondary flex items-center gap-1.5 self-start sm:self-auto">
           <RefreshCcw size={12} className={loading ? "animate-spin" : ""} /> {t("refresh")}

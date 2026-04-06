@@ -44,8 +44,8 @@ export default function AdminUsersPage() {
     <div className="space-y-10">
       {/* ── Header ── */}
       <div>
-        <p className="pl-overline mb-1">{t("user management desc")}</p>
-        <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("user management")}</h1>
+        <p className="pl-overline mb-1 leading-tight truncate">{t("user management desc")}</p>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight break-words" style={{ color: "#211b10" }}>{t("user management")}</h1>
       </div>
 
       {/* ── Table (Desktop) ── */}

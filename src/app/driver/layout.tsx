@@ -11,7 +11,7 @@ export default function DriverLayout({
     <ProtectedRoute allowedRoles={["admin", "driver"]}>
       <div className="min-h-screen" style={{ backgroundColor: "#fff8f2" }}>
         <TopNav mode="driver" />
-        <main className="max-w-2xl mx-auto px-4 md:px-6 py-8 md:py-10">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 md:py-10">
           <PageTransition>
             {children}
           </PageTransition>
