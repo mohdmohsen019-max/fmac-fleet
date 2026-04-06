@@ -29,13 +29,13 @@ export default function DriverHistoryPage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="pl-overline mb-1">{t("trip_history_desc")}</p>
-        <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("trip_history")}</h1>
+        <p className="pl-overline mb-1">{t("trip history desc")}</p>
+        <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("trip history")}</h1>
       </div>
 
       {trips.length === 0 ? (
         <div className="py-14 text-center rounded-sm" style={{ border: "1px dashed rgba(146,111,107,0.3)" }}>
-          <p className="pl-overline">{t("no_trips")}</p>
+          <p className="pl-overline">{t("no trips")}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -45,9 +45,9 @@ export default function DriverHistoryPage() {
               <thead>
                 <tr className="table-head-precision">
                   <th className="px-5 py-3 text-left">{t("date")}</th>
-                  <th className="px-5 py-3 text-left">{t("trip_type")}</th>
-                  <th className="px-5 py-3 text-right hidden sm:table-cell">{t("start_odo")}</th>
-                  <th className="px-5 py-3 text-right hidden lg:table-cell">{t("end_odo")}</th>
+                  <th className="px-5 py-3 text-left">{t("trip type")}</th>
+                  <th className="px-5 py-3 text-right hidden sm:table-cell">{t("start odo")}</th>
+                  <th className="px-5 py-3 text-right hidden lg:table-cell">{t("end odo")}</th>
                   <th className="px-5 py-3 text-right">{t("distance")}</th>
                 </tr>
               </thead>

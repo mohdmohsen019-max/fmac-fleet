@@ -49,15 +49,16 @@ export default function DriverDashboard() {
     e.preventDefault();
     if (!profile) return;
     setError("");
-    if (endOdometer < startOdometer) { setError(t("error_end_odo")); return; }
-    if (!selectedVehicle) { setError(t("error_select_vehicle")); return; }
+    if (endOdometer < startOdometer) { setError(t("error end odo")); return; }
+    if (!selectedVehicle) { setError(t("error select vehicle")); return; }
     setSubmitting(true);
     try {
-      await logTrip(profile.uid, selectedVehicle, tripType, startOdometer, endOdometer, notes);
-      alert(t("trip_success"));
+      const driverName = profile.displayName || profile.email || "Driver";
+      await logTrip(profile.uid, driverName, selectedVehicle, tripType, startOdometer, endOdometer, notes);
+      alert(t("trip success"));
       router.push("/driver/history");
     } catch (err: any) {
-      setError(err.message || t("error_end_odo"));
+      setError(err.message || t("error end odo"));
     } finally { setSubmitting(false); }
   };
 
@@ -72,40 +73,45 @@ export default function DriverDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="pl-overline mb-1">{t("log_new_trip_desc")}</p>
-        <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("log_new_trip")}</h1>
+        <p className="pl-overline mb-1">{t("log new trip desc")}</p>
+        <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("log new trip")}</h1>
       </div>
 
       <div className="rounded-sm p-6 md:p-8" style={{ backgroundColor: "#ffffff", boxShadow: "0 0 24px -4px rgba(33,27,16,0.04)" }}>
         <p className="pl-overline mb-1">Form</p>
-        <h2 className="text-base font-semibold mb-6" style={{ color: "#211b10" }}>{t("trip_details")}</h2>
+        <h2 className="text-base font-semibold mb-6" style={{ color: "#211b10" }}>{t("trip details")}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("select_vehicle")}</label>
+            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("select vehicle")}</label>
             <select value={selectedVehicle} onChange={e => setSelectedVehicle(e.target.value)} required
               className={selectCls} style={{ borderColor: "rgba(146,111,107,0.25)" }}>
-              <option value="" disabled>{t("select_vehicle_placeholder")}</option>
+              <option value="" disabled>{t("select vehicle placeholder")}</option>
               {vehicles.map(v => <option key={v.id} value={v.id}>{v.plateNumber} ({v.type})</option>)}
             </select>
           </div>
 
           <div>
-            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("trip_type")}</label>
+            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("trip type")}</label>
             <select value={tripType} onChange={e => setTripType(e.target.value as any)} required
               className={selectCls} style={{ borderColor: "rgba(146,111,107,0.25)" }}>
-              <option value="Internal">{t("internal_trip")}</option>
-              <option value="External">{t("external_trip")}</option>
+              <option value="Internal">{t("internal trip")}</option>
+              <option value="External">{t("external trip")}</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("start_odometer")}</label>
-              <Input value={startOdometer} readOnly className={inputCls} style={{ borderColor: "rgba(146,111,107,0.15)", backgroundColor: "#fff8f2" }} />
+              <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("start odometer")}</label>
+              <Input type="number" value={startOdometer} onChange={e => {
+                const val = Number(e.target.value);
+                setStartOdometer(val);
+                setEndOdometer(prev => Math.max(prev, val));
+              }} 
+              className={inputCls} style={{ borderColor: "rgba(146,111,107,0.25)" }} />
             </div>
             <div>
-              <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("end_odometer")}</label>
+              <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("end odometer")}</label>
               <Input type="number" min={startOdometer} value={endOdometer} onChange={e => setEndOdometer(Number(e.target.value))} required
                 className={inputCls} style={{ borderColor: "rgba(146,111,107,0.25)" }} />
             </div>
@@ -113,17 +119,17 @@ export default function DriverDashboard() {
 
           {/* Distance display */}
           <div className="flex items-center justify-between px-5 py-4 rounded-sm" style={{ backgroundColor: "#f9ecdb" }}>
-            <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("calculated_distance")}</span>
+            <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("calculated distance")}</span>
             <span className="text-2xl font-semibold font-mono" style={{ color: "#211b10" }}>
               {distance} <span className="text-sm font-normal" style={{ color: "#5d3f3c" }}>km</span>
             </span>
           </div>
 
           <div>
-            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("notes_optional")}</label>
+            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("notes optional")}</label>
             <textarea
               value={notes} onChange={e => setNotes(e.target.value)} rows={3}
-              placeholder={t("notes_placeholder")}
+              placeholder={t("notes placeholder")}
               className="w-full border px-4 py-3 text-sm bg-white rounded-[4px] focus:outline-none focus:border-[#c70017] transition-colors resize-none placeholder:text-[#a8a29e]"
               style={{ borderColor: "rgba(146,111,107,0.25)" }}
             />
@@ -134,7 +140,7 @@ export default function DriverDashboard() {
           )}
 
           <button type="submit" disabled={submitting || !selectedVehicle} className="btn-precision w-full py-3 flex items-center justify-center gap-2">
-            {submitting ? <><Loader2 size={14} className="animate-spin" /> {t("submitting")}</> : t("submit_trip")}
+            {submitting ? <><Loader2 size={14} className="animate-spin" /> {t("submitting")}</> : t("submit trip")}
           </button>
         </form>
       </div>

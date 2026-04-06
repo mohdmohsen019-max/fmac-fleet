@@ -16,8 +16,13 @@ export const metadata: Metadata = {
   title: "FMAC Fleet Management System",
   description: "Track fleet usage, log trips, and manage vehicle maintenance.",
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: [
+      { url: "/favicon.ico?v=3" },
+      { url: "/favicon.png?v=3", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png?v=3" },
+    ],
   },
 };
 
@@ -27,11 +32,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} antialiased`} dir="ltr">
-      <body className="min-h-screen" style={{ backgroundColor: "#fff8f2", color: "#211b10", fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif" }}>
+    <html lang="en" className={`${inter.variable} antialiased animate-in fade-in duration-700`} dir="ltr">
+      <body className="min-h-screen transition-all duration-500" style={{ backgroundColor: "#fff8f2", color: "#211b10", fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif" }}>
         <AuthProvider>
           <LanguageProvider>
-            {/* Bridge that wires AuthContext language preference → LanguageContext */}
             <LanguageAuthBridge />
             {children}
           </LanguageProvider>

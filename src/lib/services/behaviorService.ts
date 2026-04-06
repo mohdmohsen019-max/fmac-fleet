@@ -15,6 +15,14 @@ import { Scorecard, Violation } from "../schema";
 const SCORECARDS_COL = "scorecards";
 const VIOLATIONS_COL = "violations";
 
+export const normalizePlate = (p: string) => {
+  if (!p) return "";
+  return p.toUpperCase()
+    .replace(/^FUJ-/i, '')
+    .replace(/-/g, '')
+    .trim();
+};
+
 export const getScorecards = async (): Promise<Scorecard[]> => {
   const snapshot = await getDocs(collection(db, SCORECARDS_COL));
   return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Scorecard));
@@ -44,10 +52,11 @@ export const addUniqueViolations = async (violations: Omit<Violation, "id">[]) =
     const dateObj = v.date.toDate();
     const dateStr = dateObj.toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
     const typeKey = v.type.trim().replace(/\s+/g, '_').toLowerCase();
-    const docId = `${v.plate.trim().toUpperCase()}_${dateStr}_${typeKey}`;
+    const normalizedPlate = normalizePlate(v.plate);
+    const docId = `${normalizedPlate}_${dateStr}_${typeKey}`;
 
     const docRef = doc(db, VIOLATIONS_COL, docId);
-    await setDoc(docRef, v);
+    await setDoc(docRef, { ...v, plate: normalizedPlate });
   }
 };
 
@@ -56,13 +65,12 @@ export const addUniqueViolations = async (violations: Omit<Violation, "id">[]) =
  */
 export const upsertScorecards = async (scorecards: Omit<Scorecard, "id" | "updatedAt">[]) => {
   for (const s of scorecards) {
+    const normalizedPlate = normalizePlate(s.plate);
     const data = {
       ...s,
+      plate: normalizedPlate,
       updatedAt: Timestamp.now()
     };
-    // Use plate as doc ID for easy upsert, or query if you prefer auto-ids. 
-    // Querying is safer if we want to keep history, but user said "Vehicle Scoreboard (Top)" 
-    // which implies a current state. I'll use setDoc with plate as ID.
-    await setDoc(doc(db, SCORECARDS_COL, s.plate), data);
+    await setDoc(doc(db, SCORECARDS_COL, normalizedPlate), data);
   }
 };

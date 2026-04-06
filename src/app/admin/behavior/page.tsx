@@ -2,79 +2,97 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { getScorecards, getViolations, addUniqueViolations, upsertScorecards } from "@/lib/services/behaviorService";
-import { Scorecard, Violation } from "@/lib/schema";
+import { 
+  getScorecards, 
+  getViolations, 
+  upsertScorecards, 
+  normalizePlate
+} from "@/lib/services/behaviorService";
+import { Scorecard, Violation, Vehicle } from "@/lib/schema";
+import { deleteVehicle } from "@/lib/services/vehicleService";
+import { db } from "@/lib/firebase";
+import { doc, deleteDoc, collection, getDocs } from "firebase/firestore";
 import { 
   Loader2, 
   Upload, 
   Download, 
   AlertTriangle, 
-  CheckCircle, 
   Shield, 
-  BarChart3,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  ChevronDown,
-  ChevronsUpDown,
   Filter,
-  PieChart as PieChartIcon,
+  Info,
+  Calendar,
+  X,
+  ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
+  Search,
+  PieChart as PieIcon,
+  BarChart3,
   TrendingUp,
-  Activity
+  Activity,
+  History,
+  Zap
 } from "lucide-react";
-import { format, startOfDay, subDays, eachDayOfInterval, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import * as XLSX from "xlsx";
-import { Timestamp } from "firebase/firestore";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis
+import { 
+  PieChart, Pie, Cell, 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, Legend, ResponsiveContainer,
+  ScatterChart, Scatter, ZAxis
 } from "recharts";
 
-const CHART_COLORS = ["#c70017", "#5d3f3c", "#a8a29e", "#211b10", "#f9ecdb", "#e5e7eb"];
+const CHART_COLORS = ["#c70017", "#f59e0b", "#10b981", "#3b82f6", "#6366f1"];
+const RISK_COLORS = {
+  high: "#c70017",
+  medium: "#f59e0b",
+  low: "#10b981"
+};
+
+// Calibrated Fleet Baselines
+const BASELINES = {
+  AV_ALERTS_KM: 0.45,
+  HI_ALERTS_KM: 0.70,
+  HI_SPEEDING: 12,
+  HI_BEHAVIOR: 8,
+  HI_IDLE: 0.20
+};
+
+const timeToSeconds = (timeStr: string) => {
+  if (!timeStr) return 0;
+  const parts = timeStr.split(':').map(Number);
+  if (parts.length !== 3) return 0;
+  return parts[0] * 3600 + parts[1] * 60 + parts[2];
+};
+
+// Robust Number Parser for Excel Format (handles spaces and commas)
+const cleanNum = (val: any): number => {
+  if (val === null || val === undefined || val === "") return 0;
+  if (typeof val === "number") return val;
+  const cleaned = String(val).replace(/\s/g, '').replace(/,/g, '');
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+};
 
 export default function BehaviorPage() {
   const { t } = useLanguage();
   const [scorecards, setScorecards] = useState<Scorecard[]>([]);
-  const [violations, setViolations] = useState<Violation[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [riskFilter, setRiskFilter] = useState("all");
+  const [cleaning, setCleaning] = useState(false);
 
-  // Pagination State
-  const [scorePage, setScorePage] = useState(0);
-  const [scoreRowsPerPage, setScoreRowsPerPage] = useState(20);
-  const [vPage, setVPage] = useState(0);
-  const [vRowsPerPage, setVRowsPerPage] = useState(20);
-
-  // Sorting & Filtering State
-  const [scoreSort, setScoreSort] = useState<{ key: string; dir: 'asc' | 'desc' }>({ key: 'totalScore', dir: 'asc' }); // Default to low score (high risk) first
-  const [vSort, setVSort] = useState<{ key: string; dir: 'asc' | 'desc' }>({ key: 'date', dir: 'desc' });
-  const [vTypeFilter, setVTypeFilter] = useState("all");
-
-  // Chart Toggle State
-  const [violationChartType, setViolationChartType] = useState<"distribution" | "trend">("distribution");
+  const [sortConfig, setSortConfig] = useState<{ key: string; dir: 'asc' | 'desc' }>({ key: 'riskScore', dir: 'desc' });
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [s, v] = await Promise.all([getScorecards(), getViolations()]);
+      const { getVehicles } = await import("@/lib/services/vehicleService");
+      const [s, vels] = await Promise.all([getScorecards(), getVehicles()]);
       setScorecards(s);
-      setViolations(v);
+      setVehicles(vels);
     } catch (e) {
       console.error(e);
     } finally {
@@ -86,115 +104,139 @@ export default function BehaviorPage() {
     fetchData();
   }, []);
 
-  const getRiskLevel = (score: number, vCount: number) => {
-    if (score < 60 || vCount > 5) return "high";
-    if (score >= 60 && score < 80) return "medium";
-    return "low";
-  };
+  const dashboardData = useMemo(() => {
+    if (scorecards.length === 0) return [];
 
-  // Intelligence Data
-  const vehicleStats = useMemo(() => scorecards.map(s => {
-    const vCount = violations.filter(v => v.plate === s.plate).length;
-    return {
-      ...s,
-      violationCount: vCount,
-      risk: getRiskLevel(s.totalScore, vCount)
-    };
-  }), [scorecards, violations]);
+    const fleetRaw = scorecards.map(s => {
+      const sBraking = s.braking || 0;
+      const sAccel = s.acceleration || 0;
+      const sCornering = s.cornering || 0;
+      const sS100 = s.speed100 || 0;
+      const sS120 = s.speed120 || 0;
+      const sS140 = s.speed140 || 0;
+      const sTrips = s.trips || 0;
+      const sKms = s.kms || 0;
+      const sDuration = s.totalDuration || "00:00:00";
+      const sIdleTime = s.idlingTime || "00:00:00";
+      const sAfterHours = s.afterHoursTrips || 0;
 
-  const fleetAvg = scorecards.length > 0 
-    ? scorecards.reduce((acc, s) => acc + s.totalScore, 0) / scorecards.length 
-    : 0;
+      const totalAlerts = sBraking + sAccel + sCornering + sS100 + sS120 + sS140;
+      const alertsPerKm = sKms > 0 ? totalAlerts / sKms : 0;
+      
+      return { ...s, totalAlerts, alertsPerKm, sBraking, sAccel, sCornering, sS100, sS120, sS140, sTrips, sKms, sDuration, sIdleTime, sAfterHours };
+    });
 
-  const highRiskCount = vehicleStats.filter(s => s.risk === "high").length;
+    // Real Fleet Average Calculation for Multiplier
+    const fleetAvgAlertsPerKm = fleetRaw.reduce((acc, d) => acc + d.alertsPerKm, 0) / fleetRaw.length;
 
-  const mostFrequentViolation = violations.length > 0
-    ? Object.entries(violations.reduce((acc, v) => {
-        acc[v.type] = (acc[v.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1])[0][0]
-    : "—";
+    const processed = fleetRaw.map(d => {
+      const vels = vehicles.find(v => normalizePlate(v.plateNumber) === d.plate);
+      
+      // Normalized Metrics (0-1) - Using High Risk Ceiling for Normalization
+      const normAlerts = Math.min(d.alertsPerKm / BASELINES.HI_ALERTS_KM, 1);
+      
+      const behaviorRate = d.sTrips > 0 ? (d.sBraking + d.sAccel + d.sCornering) / d.sTrips : 0;
+      const normBehavior = Math.min(behaviorRate / BASELINES.HI_BEHAVIOR, 1);
+      
+      const speedingIndex = d.sTrips > 0 ? (d.sS100 * 2 + d.sS120 * 3 + d.sS140 * 5) / d.sTrips : 0;
+      const normSpeeding = Math.min(speedingIndex / BASELINES.HI_SPEEDING, 1);
+      
+      const idleSec = timeToSeconds(d.sIdleTime);
+      const totalDurSec = timeToSeconds(d.sDuration);
+      const idleRatio = totalDurSec > 0 ? idleSec / totalDurSec : 0;
+      const normIdle = Math.min(idleRatio / BASELINES.HI_IDLE, 1);
 
-  // Chart Data Preparation
-  const donutData = useMemo(() => {
-    const counts = violations.reduce((acc, v) => {
-      acc[v.type] = (acc[v.type] || 0) + 1;
+      // Revised Balanced Scoring (40/25/20/15)
+      const riskScore = (
+        normAlerts * 40 +
+        normSpeeding * 25 +
+        normBehavior * 20 +
+        normIdle * 15
+      );
+
+      // Relative Risk Multiplier vs Calculated Fleet Average
+      const relativeRisk = fleetAvgAlertsPerKm > 0 ? d.alertsPerKm / fleetAvgAlertsPerKm : 1;
+
+      return {
+        ...d,
+        vehicleName: vels?.makeAndModel || "Unknown",
+        busId: vels?.busNumber || "N/A",
+        behaviorRate: Math.min(1, behaviorRate / BASELINES.HI_BEHAVIOR), 
+        speedingIndex,
+        idleRatio,
+        riskScore,
+        relativeRisk
+      };
+    });
+
+    // Automated Prediction Rule: >60% HIGH risk boosts threshold by 20%
+    const currentHighCount = processed.filter(d => d.riskScore >= 75).length;
+    const isOverSaturated = processed.length > 0 && currentHighCount / processed.length > 0.6;
+    
+    // Dynamic Tiers
+    const HI_THRESHOLD = isOverSaturated ? 75 * 1.2 : 75;
+    const MD_THRESHOLD = isOverSaturated ? 45 * 1.2 : 45;
+
+    return processed.map(d => ({
+      ...d,
+      riskLevel: d.riskScore >= HI_THRESHOLD ? 'high' : d.riskScore >= MD_THRESHOLD ? 'medium' : 'low'
+    })).filter(d => {
+      const matchesSearch = d.plate.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           d.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           d.busId.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRisk = riskFilter === "all" || d.riskLevel === riskFilter;
+      return matchesSearch && matchesRisk;
+    }).sort((a: any, b: any) => {
+      const valA = a[sortConfig.key];
+      const valB = b[sortConfig.key];
+      if (typeof valA === 'string') {
+        return sortConfig.dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      return sortConfig.dir === 'asc' ? valA - valB : valB - valA;
+    });
+  }, [scorecards, vehicles, searchTerm, riskFilter, sortConfig]);
+
+  const stats = useMemo(() => {
+    if (dashboardData.length === 0) return { total: 0, highRisk: 0, totalKm: 0, totalAlts: 0, avgAlertsPerKm: 0 };
+    const total = dashboardData.length;
+    const highRisk = dashboardData.filter(d => d.riskLevel === "high").length;
+    const totalKm = dashboardData.reduce((acc, d) => acc + d.sKms, 0);
+    const totalAlts = dashboardData.reduce((acc, d) => acc + (d.totalAlerts || 0), 0);
+    const avgAlertsPerKm = totalKm > 0 ? totalAlts / totalKm : 0;
+
+    return { total, highRisk, totalKm, totalAlts, avgAlertsPerKm };
+  }, [dashboardData]);
+
+  // Chart Data
+  const riskDistData = useMemo(() => {
+    const counts = dashboardData.reduce((acc, d) => {
+      acc[d.riskLevel] = (acc[d.riskLevel] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [violations]);
-
-  const barData = useMemo(() => {
-    const last30 = eachDayOfInterval({
-      start: subDays(new Date(), 29),
-      end: new Date()
-    });
-    return last30.map(day => ({
-      date: format(day, "MMM dd"),
-      count: violations.filter(v => isSameDay(v.date.toDate(), day)).length
-    }));
-  }, [violations]);
-
-  const radarData = useMemo(() => {
-    if (scorecards.length === 0) return [];
-    const sum = scorecards.reduce((acc, s) => {
-      acc.braking += s.braking;
-      acc.acceleration += s.acceleration;
-      acc.cornering += s.cornering;
-      acc.speeding += s.speeding;
-      return acc;
-    }, { braking: 0, acceleration: 0, cornering: 0, speeding: 0 });
-    
-    const count = scorecards.length;
     return [
-      { subject: t("braking"), A: sum.braking / count, fullMark: 100 },
-      { subject: t("acceleration"), A: sum.acceleration / count, fullMark: 100 },
-      { subject: t("cornering"), A: sum.cornering / count, fullMark: 100 },
-      { subject: t("speeding"), A: sum.speeding / count, fullMark: 100 },
+      { name: 'High Risk', value: counts.high || 0, color: RISK_COLORS.high },
+      { name: 'Medium Risk', value: counts.medium || 0, color: RISK_COLORS.medium },
+      { name: 'Low Risk', value: counts.low || 0, color: RISK_COLORS.low }
     ];
-  }, [scorecards, t]);
+  }, [dashboardData]);
 
-  // Derived Filtered & Sorted Lists
-  const violationTypes = useMemo(() => {
-    return Array.from(new Set(violations.map(v => v.type))).sort();
-  }, [violations]);
+  const benchmarkData = useMemo(() => {
+    const avg = stats.avgAlertsPerKm;
+    return dashboardData.slice(0, 10).map(d => ({
+      name: d.plate,
+      vehicle: d.alertsPerKm,
+      fleet: avg
+    }));
+  }, [dashboardData, stats.avgAlertsPerKm]);
 
-  const sortedScoreStats = useMemo(() => {
-    const sorted = [...vehicleStats];
-    sorted.sort((a: any, b: any) => {
-      let valA = a[scoreSort.key];
-      let valB = b[scoreSort.key];
-      
-      if (typeof valA === 'string') {
-        return scoreSort.dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      }
-      return scoreSort.dir === 'asc' ? valA - valB : valB - valA;
-    });
-    return sorted;
-  }, [vehicleStats, scoreSort]);
+  const topBottomData = useMemo(() => {
+    const sorted = [...dashboardData].sort((a, b) => b.riskScore - a.riskScore);
+    const top = sorted.slice(0, 5);
+    const bottom = sorted.slice(-5).reverse();
+    return { top, bottom };
+  }, [dashboardData]);
 
-  const processedViolations = useMemo(() => {
-    let filtered = [...violations];
-    if (vTypeFilter !== "all") {
-      filtered = filtered.filter(v => v.type === vTypeFilter);
-    }
-    
-    filtered.sort((a, b) => {
-      if (vSort.key === 'date') {
-        const timeA = a.date.toMillis();
-        const timeB = b.date.toMillis();
-        return vSort.dir === 'asc' ? timeA - timeB : timeB - timeA;
-      }
-      const valA = String((a as any)[vSort.key]);
-      const valB = String((b as any)[vSort.key]);
-      return vSort.dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-    });
-    
-    return filtered;
-  }, [violations, vTypeFilter, vSort]);
-
-  // CSV Logical Handlers
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "score" | "violation") => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -205,414 +247,371 @@ export default function BehaviorPage() {
         const dataArr = evt.target?.result;
         const wb = XLSX.read(dataArr, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const rawItems = XLSX.utils.sheet_to_json(ws, { defval: "" }) as any[];
+        const rawItems = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
 
-        const data = rawItems.map(item => {
-          const normalized: any = {};
-          Object.keys(item).forEach(key => { normalized[key.trim().toLowerCase()] = item[key]; });
-          return normalized;
+        // Smart dynamic row scanning: skips headers and finds rows starting with valid registration
+        const scoreData: Omit<Scorecard, "id" | "updatedAt">[] = [];
+
+        rawItems.forEach(row => {
+          const plateStr = String(row[0] || "").trim();
+          // Filter to only include rows that look like a valid registration (e.g. FUJ-...)
+          if (!plateStr || !plateStr.toUpperCase().startsWith("FUJ-")) return;
+          
+          scoreData.push({
+            plate: plateStr,
+            trips: cleanNum(row[2]),
+            afterHoursTrips: cleanNum(row[3]),
+            braking: cleanNum(row[4]),
+            acceleration: cleanNum(row[6]),
+            cornering: cleanNum(row[7]),
+            idlingCount: cleanNum(row[8]),
+            idlingTime: String(row[9] || "00:00:00"),
+            speed80: cleanNum(row[10]),
+            speed100: cleanNum(row[11]),
+            speed120: cleanNum(row[12]),
+            speed140: cleanNum(row[13]),
+            avgSpeed: cleanNum(row[14]),
+            totalDuration: String(row[22] || "00:00:00"),
+            kms: cleanNum(row[23])
+          });
         });
 
-        if (type === "score") {
-          const formatted = data.map(row => ({
-            plate: String(row.plate || row.vehicle_id || row.vehicle_name || "").trim(),
-            kms: Number(row.kms || row.total_km || 0),
-            braking: Number(row.braking || 0),
-            acceleration: Number(row.acceleration || 0),
-            cornering: Number(row.cornering || 0),
-            speeding: Number(row.speeding || 0),
-            totalScore: Number(row.score || row.total_score || 0)
-          })).filter(it => it.plate !== "");
-          if (formatted.length === 0) throw new Error("No valid data rows found.");
-          await upsertScorecards(formatted);
-        } else {
-          const formatted = data.map(row => {
-            const dateVal = row.date || row.timestamp || "";
-            let dateObj: Date;
-            if (typeof dateVal === 'number') {
-              const utc_days = Math.floor(dateVal - 25569);
-              dateObj = new Date(utc_days * 86400 * 1000);
-            } else {
-              dateObj = new Date(String(dateVal).trim());
-            }
-            if (isNaN(dateObj.getTime())) throw new Error(`Invalid date: ${dateVal}`);
-            return {
-              plate: String(row.plate || row.vehicle_id || row.vehicle_name || "").trim(),
-              date: Timestamp.fromDate(dateObj),
-              type: String(row.type || row.violation_type || "").trim()
-            };
-          }).filter(it => it.plate !== "");
-          if (formatted.length === 0) throw new Error("No valid data rows found.");
-          await addUniqueViolations(formatted);
-        }
+        if (scoreData.length === 0) throw new Error("No valid data rows starting with 'FUJ-' were found.");
+        await upsertScorecards(scoreData);
         await fetchData();
-        alert(t("csv_upload_success"));
+        alert(`Recalibrated Risk data for ${scoreData.length} vehicles imported successfully!`);
       } catch (err: any) {
-        alert(`${t("csv_upload_failed")} ${err.message || ""}`);
+        alert(`Import failed: ${err.message}`);
       } finally {
         setUploading(false);
         setShowUpload(false);
-        if (e.target) e.target.value = "";
       }
     };
     reader.readAsArrayBuffer(file);
   };
 
-  const exportTable = (type: "score" | "violation") => {
-    const data = type === "score" 
-      ? vehicleStats.map(s => ({ Plate: s.plate, KM: s.kms, Braking: s.braking, Accel: s.acceleration, Speed: s.speeding, Score: s.totalScore, Risk: s.risk }))
-      : violations.map(v => ({ Plate: v.plate, Date: format(v.date.toDate(), "yyyy-MM-dd"), Type: v.type }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Data");
-    XLSX.writeFile(wb, `fmac_${type}_export.csv`);
+  const handleSort = (key: string) => {
+    setSortConfig(prev => ({
+      key,
+      dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc'
+    }));
   };
 
-  // Pagination Logic
-  const paginatedScores = sortedScoreStats.slice(scorePage * scoreRowsPerPage, (scorePage + 1) * scoreRowsPerPage);
-  const paginatedViolations = processedViolations.slice(vPage * vRowsPerPage, (vPage + 1) * vRowsPerPage);
+  const handleResetFleet = async () => {
+    if (!confirm("☢️ NUCLEAR RESET: This will PERMANENTLY DELETE all vehicles, scorecards, and violations from the database. This action cannot be undone. Proceed?")) return;
+    
+    setCleaning(true);
+    try {
+      const velsSnap = await getDocs(collection(db, "vehicles"));
+      const scoreSnap = await getDocs(collection(db, "scorecards"));
+      const violationSnap = await getDocs(collection(db, "violations"));
 
-  const handleSort = (table: 'score' | 'violation', key: string) => {
-    if (table === 'score') {
-      setScoreSort(prev => ({
-        key,
-        dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc'
-      }));
-      setScorePage(0);
-    } else {
-      setVSort(prev => ({
-        key,
-        dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc'
-      }));
-      setVPage(0);
+      const deletions = [
+        ...velsSnap.docs.map(d => deleteDoc(doc(db, "vehicles", d.id))),
+        ...scoreSnap.docs.map(d => deleteDoc(doc(db, "scorecards", d.id))),
+        ...violationSnap.docs.map(d => deleteDoc(doc(db, "violations", d.id)))
+      ];
+
+      await Promise.all(deletions);
+
+      alert(`Database wiped. Reset ${deletions.length} records. You can now import fresh data.`);
+      fetchData();
+    } catch (e) {
+      console.error(e);
+      alert("Reset failed. See console.");
+    } finally {
+      setCleaning(false);
     }
   };
 
-  const SortIndicator = ({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) => {
-    if (!active) return <ChevronsUpDown size={12} className="opacity-20" />;
-    return dir === 'asc' ? <ChevronUp size={12} className="text-[#c70017]" /> : <ChevronDown size={12} className="text-[#c70017]" />;
-  };
-
-  const PaginationControl = ({ current, total, rowsPerPage, setRowsPerPage, setPage }: any) => {
-    const totalPages = Math.ceil(total / rowsPerPage);
-    return (
-      <div className="flex flex-wrap items-center justify-between gap-4 mt-6 px-1">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#a8a29e" }}>{t("rows_per_page")}</span>
-          <select 
-            value={rowsPerPage} 
-            onChange={e => { setRowsPerPage(Number(e.target.value)); setPage(0); }}
-            className="bg-white border rounded-sm text-sm px-2 py-1 outline-none focus:border-[#c70017]"
-          >
-            {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <button 
-            disabled={current === 0}
-            onClick={() => setPage(current - 1)}
-            className="p-2 rounded-sm border hover:bg-white disabled:opacity-30 transition-colors"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="text-sm font-mono" style={{ color: "#5d3f3c" }}>
-            {current + 1} / {totalPages || 1}
-          </span>
-          <button 
-            disabled={current >= totalPages - 1}
-            onClick={() => setPage(current + 1)}
-            className="p-2 rounded-sm border hover:bg-white disabled:opacity-30 transition-colors"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-    );
+  const exportData = () => {
+    const data = dashboardData.map(d => ({
+      "Vehicle ID": d.plate,
+      "vs Fleet Avg": d.relativeRisk.toFixed(1) + "x",
+      "Risk Score": Math.round(d.riskScore),
+      "Risk Level": d.riskLevel.toUpperCase(),
+      "Alerts/KM": d.alertsPerKm.toFixed(3),
+      "Behavior Rate": (d.behaviorRate * 100).toFixed(1) + "%",
+      "Speeding Index": d.speedingIndex.toFixed(2),
+      "Total KM": d.sKms
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Risk Assessment");
+    XLSX.writeFile(wb, `fmac_recalibrated_risk_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 
   return (
-    <div className="space-y-12 pb-20">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div className="space-y-8 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="pl-overline mb-1">{t("behavior_desc")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("fleet_behavior")}</h1>
+          <p className="pl-overline mb-1">Precise Operational Baseline Assessment</p>
+          <h1 className="text-4xl font-semibold tracking-tight text-[#211b10]">Fleet Risk Intelligence Dashboard</h1>
         </div>
-        <button onClick={() => setShowUpload(!showUpload)} className="btn-secondary flex items-center gap-1.5 self-start">
-          {showUpload ? <X size={14} /> : <Upload size={14} />} {showUpload ? t("cancel") : t("upload_csv")}
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleResetFleet} 
+            disabled={cleaning}
+            className="btn-secondary text-[#c70017] border-[#c70017]/20 hover:bg-[#c70017]/5 flex items-center gap-2"
+          >
+             {cleaning ? <Loader2 size={16} className="animate-spin" /> : <AlertTriangle size={16} />} Reset & Clear Data
+          </button>
+          <button onClick={() => setShowUpload(!showUpload)} className="btn-secondary flex items-center gap-2">
+             {showUpload ? <X size={16} /> : <Upload size={16} />} {showUpload ? "Cancel" : "Import Operational Data"}
+          </button>
+          <button onClick={exportData} className="btn-secondary flex items-center gap-2">
+            <Download size={16} /> Export Detailed Risk
+          </button>
+        </div>
       </div>
 
       {showUpload && (
-        <div className="p-8 rounded-sm grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-4 duration-300" style={{ backgroundColor: "#ffffff", border: "1px solid rgba(146,111,107,0.15)", boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2" style={{ color: "#c70017" }}><Activity size={16}/> {t("scoreboard")}</h3>
-            <p className="text-xs leading-relaxed" style={{ color: "#a8a29e" }}>REQUIRED: plate/vehicle_name, kms, braking, acceleration, cornering, speeding, score</p>
-            <input type="file" accept=".csv" onChange={e => handleFileUpload(e, "score")} className="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-[#f9ecdb] file:text-[#c70017] hover:file:bg-[#ede1cf] cursor-pointer" />
+        <div className="p-8 rounded-sm bg-white border border-[#926f6b]/20 shadow-xl animate-in fade-in slide-in-from-top-4">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="p-3 rounded-sm bg-[#f9ecdb]">
+              <Zap size={24} className="text-[#c70017]" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Recalibrated Data Ingestion</h3>
+              <p className="text-sm text-[#5d3f3c]">Upload the report to calculate normalized risk scores and relative benchmarks.</p>
+            </div>
           </div>
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2" style={{ color: "#c70017" }}><AlertTriangle size={16}/> {t("violations")}</h3>
-            <p className="text-xs leading-relaxed" style={{ color: "#a8a29e" }}>REQUIRED: plate/vehicle_id, date, type/violation_type</p>
-            <input type="file" accept=".csv" onChange={e => handleFileUpload(e, "violation")} className="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-[#f9ecdb] file:text-[#c70017] hover:file:bg-[#ede1cf] cursor-pointer" />
+          <div className="border-2 border-dashed border-[#926f6b]/20 rounded-sm p-10 text-center hover:border-[#c70017]/40 transition-colors">
+            <input type="file" accept=".xls,.xlsx" onChange={handleFileUpload} className="hidden" id="file-upload" />
+            <label htmlFor="file-upload" className="cursor-pointer">
+              <Upload size={32} className="mx-auto mb-4 text-[#a8a29e]" />
+              <p className="text-sm font-semibold text-[#211b10]">Click to select the report file</p>
+              <p className="text-xs text-[#a8a29e] mt-1">Normalizes metrics to 0-1 range based on industry benchmarks.</p>
+            </label>
           </div>
+          {uploading && (
+            <div className="mt-4 flex items-center justify-center gap-2 text-sm font-bold text-[#c70017]">
+               <Loader2 size={16} className="animate-spin" /> Normalizing fleet intelligence...
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── KPIs ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {/* Stats Summary Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: t("high_risk_vehicles"), val: highRiskCount, color: highRiskCount > 0 ? "#c70017" : "#211b10", icon: <AlertTriangle size={16}/>, sub: "Immediate audit required" },
-          { label: t("avg_fleet_score"), val: fleetAvg.toFixed(1), color: "#211b10", icon: <Activity size={16}/>, sub: "Fleet performance benchmark" },
-          { label: t("most_frequent_violation"), val: mostFrequentViolation, color: "#211b10", icon: <Shield size={16}/>, sub: "Priority safety focus", small: true }
+          { label: "Fleet KM Tracking", val: stats.totalKm.toFixed(0), sub: "Operational Range", icon: <Activity size={18} /> },
+          { label: "Fleet Intensity Index", val: stats.avgAlertsPerKm.toFixed(3), sub: "Industry Baseline: 0.450", icon: <TrendingUp size={18} /> },
+          { label: "Active Risk Units", val: stats.highRisk, sub: "Threshold: 75+", icon: <Shield size={18} />, highlight: stats.highRisk > 0 },
+          { label: "Operational Vehicles", val: stats.total, sub: "Data Integrity", icon: <Zap size={18} /> }
         ].map((kpi, i) => (
-          <div key={i} className="p-6 rounded-sm bg-white border border-opacity-10 border-[#926f6b]">
-            <p className="pl-overline mb-3">{kpi.label}</p>
-            <span className={`${kpi.small ? 'text-xl' : 'text-4xl'} font-semibold tracking-tight`} style={{ color: kpi.color }}>{kpi.val}</span>
-            <div className="mt-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "#a8a29e" }}>
-              {kpi.icon} {kpi.sub}
+          <div key={i} className={`p-6 rounded-sm bg-white border ${kpi.highlight ? 'border-[#c70017]/30 ring-1 ring-[#c70017]/10' : 'border-[#926f6b]/10'}`}>
+            <p className="pl-overline mb-2 text-[#a8a29e]">{kpi.label}</p>
+            <div className="flex items-baseline gap-2">
+              <span className={`text-3xl font-semibold tracking-tight ${kpi.highlight ? 'text-[#c70017]' : 'text-[#211b10]'}`}>{kpi.val}</span>
             </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mt-4 flex items-center gap-2 text-[#a8a29e]">
+              {kpi.icon} {kpi.sub}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* ── Visual Intelligence Section ── */}
+      {/* Visual Intelligence Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Violation Intelligence */}
-        <div className="bg-white p-8 rounded-sm border border-opacity-10 border-[#926f6b]">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "#211b10" }}>
-              {violationChartType === "distribution" ? t("violation_distribution") : t("violation_trends")}
-            </h2>
-            <div className="flex gap-1 p-1 rounded-sm" style={{ backgroundColor: "#f9ecdb" }}>
-              <button 
-                onClick={() => setViolationChartType("distribution")}
-                className={`p-1.5 rounded-sm transition-all ${violationChartType === "distribution" ? 'bg-white shadow-sm' : 'opacity-40'}`}
+        {/* Risk Score Histogram */}
+        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col">
+          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
+            <PieIcon size={14} /> Risk Distribution Spread
+          </h3>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={riskDistData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
               >
-                <PieChartIcon size={14} />
-              </button>
-              <button 
-                onClick={() => setViolationChartType("trend")}
-                className={`p-1.5 rounded-sm transition-all ${violationChartType === "trend" ? 'bg-white shadow-sm' : 'opacity-40'}`}
-              >
-                <TrendingUp size={14} />
-              </button>
-            </div>
-          </div>
-
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              {violationChartType === "distribution" ? (
-                <PieChart>
-                  <Pie 
-                    data={donutData} 
-                    innerRadius={60} 
-                    outerRadius={100} 
-                    paddingAngle={5} 
-                    dataKey="value"
-                    animationDuration={1000}
-                  >
-                    {donutData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend iconType="circle" />
-                </PieChart>
-              ) : (
-                <BarChart data={barData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                  <XAxis dataKey="date" hide />
-                  <YAxis hide />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#c70017" radius={[2, 2, 0, 0]} />
-                </BarChart>
-              )}
-            </ResponsiveContainer>
-          </div>
+                {riskDistData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <ReTooltip />
+              <Legend verticalAlign="bottom" height={36}/>
+            </PieChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* Performance Radar */}
-        <div className="bg-white p-8 rounded-sm border border-opacity-10 border-[#926f6b]">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "#211b10" }}>{t("performance_profile")}</h2>
-            <BarChart3 size={16} style={{ color: "#a8a29e" }} />
-          </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                <PolarGrid stroke="rgba(0,0,0,0.05)" />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 700, fill: "#5d3f3c" }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} hide />
-                <Radar
-                  name={t("fleet_behavior")}
-                  dataKey="A"
-                  stroke="#c70017"
-                  fill="#c70017"
-                  fillOpacity={0.15}
-                />
-                <Tooltip />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
+        {/* Alerts/km vs Average */}
+        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col">
+          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2">
+            <BarChart3 size={14} /> Intensity vs Fleet Average
+          </h3>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={benchmarkData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+              <ReTooltip cursor={{ fill: '#f9ecdb' }} />
+              <Legend />
+              <Bar dataKey="vehicle" name="Vehicle Alerts/KM" fill="#c70017" barSize={15} />
+              <Bar dataKey="fleet" name="Fleet Average" fill="#a8a29e" barSize={15} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Top Risk Vehicles */}
+        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col">
+          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2 text-[#c70017]">
+            <TrendingUp size={14} /> Top 5 Risk Offenders
+          </h3>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={topBottomData.top} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f5f5f5" />
+              <XAxis type="number" domain={[0, 100]} hide />
+              <YAxis dataKey="plate" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+              <ReTooltip cursor={{ fill: '#c7001710' }} />
+              <Bar dataKey="riskScore" fill="#c70017" radius={[0, 4, 4, 0]} barSize={15} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Bottom Risk Vehicles */}
+        <div className="bg-white p-6 border border-[#926f6b]/10 rounded-sm h-[350px] flex flex-col">
+          <h3 className="text-xs font-black uppercase tracking-tighter text-[#a8a29e] mb-6 flex items-center gap-2 text-[#10b981]">
+            <Shield size={14} /> Top 5 Safety Leaders
+          </h3>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={topBottomData.bottom} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f5f5f5" />
+              <XAxis type="number" domain={[0, 100]} hide />
+              <YAxis dataKey="plate" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} />
+              <ReTooltip cursor={{ fill: '#10b98110' }} />
+              <Bar dataKey="riskScore" fill="#10b981" radius={[0, 4, 4, 0]} barSize={15} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* ── Tables ── */}
-      <section className="space-y-12">
-        {/* Scoreboard Table */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "#211b10" }}>{t("scoreboard")}</h2>
-            <button onClick={() => exportTable("score")} className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 py-2 px-3 rounded-sm border hover:bg-white transition-colors" style={{ color: "#5d3f3c" }}>
-              <Download size={12} /> {t("excel")}
-            </button>
-          </div>
-          <div className="rounded-sm overflow-hidden hidden sm:block bg-white border border-opacity-10 border-[#926f6b]">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="table-head-precision">
-                  <th className="px-5 py-3 text-left cursor-pointer hover:bg-[#fff8f2] transition-colors group" onClick={() => handleSort('score', 'plate')}>
-                    <div className="flex items-center gap-1.5">
-                      {t("plate")} <SortIndicator active={scoreSort.key === 'plate'} dir={scoreSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-5 py-2 text-right cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('score', 'kms')}>
-                    <div className="flex items-center justify-end gap-1.5">
-                      {t("total_km")} <SortIndicator active={scoreSort.key === 'kms'} dir={scoreSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-3 py-2 text-center text-[10px] cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('score', 'braking')}>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span>{t("braking")}</span>
-                      <SortIndicator active={scoreSort.key === 'braking'} dir={scoreSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-3 py-2 text-center text-[10px] cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('score', 'acceleration')}>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span>{t("acceleration")}</span>
-                      <SortIndicator active={scoreSort.key === 'acceleration'} dir={scoreSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-3 py-2 text-center text-[10px] cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('score', 'cornering')}>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span>{t("cornering")}</span>
-                      <SortIndicator active={scoreSort.key === 'cornering'} dir={scoreSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-3 py-2 text-center text-[10px] cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('score', 'speeding')}>
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span>{t("speeding")}</span>
-                      <SortIndicator active={scoreSort.key === 'speeding'} dir={scoreSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-5 py-2 text-right cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('score', 'totalScore')}>
-                    <div className="flex items-center justify-end gap-1.5">
-                      {t("score")} <SortIndicator active={scoreSort.key === 'totalScore'} dir={scoreSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-5 py-2 text-center">{t("risk_level")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loading ? (
-                  <tr><td colSpan={8} className="py-20 text-center"><Loader2 className="animate-spin mx-auto w-6 h-6" style={{ color: "#c70017" }} /></td></tr>
-                ) : paginatedScores.length === 0 ? (
-                  <tr><td colSpan={8} className="py-20 text-center pl-overline">{t("no_vehicles")}</td></tr>
-                ) : paginatedScores.map(s => (
-                  <tr key={s.id || s.plate} className="transition-colors" style={{ backgroundColor: s.risk === "medium" ? "#fff8f2" : "#ffffff" }}>
-                    <td className="px-5 py-4 text-sm font-bold" style={{ color: "#211b10" }}>{s.plate}</td>
-                    <td className="px-5 py-4 text-sm text-right font-mono" style={{ color: "#5d3f3c" }}>{s.kms.toLocaleString()}</td>
-                    <td className="px-3 py-4 text-sm text-center font-mono" style={{ color: "#5d3f3c" }}>{s.braking}</td>
-                    <td className="px-3 py-4 text-sm text-center font-mono" style={{ color: "#5d3f3c" }}>{s.acceleration}</td>
-                    <td className="px-3 py-4 text-sm text-center font-mono" style={{ color: "#5d3f3c" }}>{s.cornering}</td>
-                    <td className="px-3 py-4 text-sm text-center font-mono" style={{ color: "#5d3f3c" }}>{s.speeding}</td>
-                    <td className={`px-5 py-4 text-sm text-right font-bold ${s.totalScore < 60 ? "text-[#c70017]" : "text-[#211b10]"}`}>{s.totalScore}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex justify-center">
-                        {s.risk === "high" ? <AlertTriangle size={18} className="text-[#c70017]" /> : s.risk === "medium" ? <Shield size={18} className="text-[#a8a29e]" /> : <CheckCircle size={18} className="text-green-600" />}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Mobile Mobile Scores Redacted for space, keeping Desktop Logic same as before but paginated */}
-          {!loading && paginatedScores.length > 0 && (
-            <PaginationControl 
-              current={scorePage} total={sortedScoreStats.length} 
-              rowsPerPage={scoreRowsPerPage} setRowsPerPage={setScoreRowsPerPage} setPage={setScorePage} 
+      {/* Main Decision Table */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-4 px-6 py-4 rounded-sm bg-white border border-[#926f6b]/10">
+          <div className="flex-1 min-w-[200px] relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a8a29e]" size={16} />
+            <input 
+              type="text" 
+              placeholder="Filter fleet..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-[#f9ecdb]/20 border border-transparent focus:border-[#c70017]/20 rounded-sm outline-none text-sm"
             />
-          )}
+          </div>
+          <select 
+              value={riskFilter} 
+              onChange={e => setRiskFilter(e.target.value)}
+              className="bg-transparent text-xs font-black uppercase outline-none cursor-pointer text-[#a8a29e]"
+            >
+              <option value="all">Global Fleet</option>
+              <option value="high">🔴 High Focus</option>
+              <option value="medium">🟡 Watchlist</option>
+              <option value="low">⚪ Baseline</option>
+          </select>
         </div>
 
-        {/* Violations Table */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "#211b10" }}>{t("violations")}</h2>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 group">
-                <Filter size={14} className="text-[#a8a29e] group-hover:text-[#c70017] transition-colors" />
-                <select 
-                  value={vTypeFilter} 
-                  onChange={e => { setVTypeFilter(e.target.value); setVPage(0); }}
-                  className="bg-transparent text-[10px] font-bold uppercase tracking-widest outline-none border-b border-transparent focus:border-[#c70017] cursor-pointer"
-                  style={{ color: "#5d3f3c" }}
-                >
-                  <option value="all">{t("all_types") || "All Types"}</option>
-                  {violationTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <button onClick={() => exportTable("violation")} className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 py-2 px-3 rounded-sm border hover:bg-white transition-colors" style={{ color: "#5d3f3c" }}>
-                <Download size={12} /> {t("excel")}
-              </button>
-            </div>
-          </div>
-          <div className="rounded-sm overflow-hidden bg-white border border-opacity-10 border-[#926f6b]">
+        <div className="rounded-sm overflow-hidden bg-white border border-[#926f6b]/10 shadow-sm">
+          <div className="overflow-x-auto min-h-[400px]">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="table-head-precision">
-                  <th className="px-5 py-3 text-left cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('violation', 'plate')}>
-                    <div className="flex items-center gap-1.5">
-                      {t("plate")} <SortIndicator active={vSort.key === 'plate'} dir={vSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-5 py-3 text-left cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('violation', 'date')}>
-                    <div className="flex items-center gap-1.5">
-                      {t("date")} <SortIndicator active={vSort.key === 'date'} dir={vSort.dir} />
-                    </div>
-                  </th>
-                  <th className="px-5 py-3 text-left cursor-pointer hover:bg-[#fff8f2] transition-colors" onClick={() => handleSort('violation', 'type')}>
-                    <div className="flex items-center gap-1.5">
-                      {t("violation_type")} <SortIndicator active={vSort.key === 'type'} dir={vSort.dir} />
-                    </div>
-                  </th>
+                <tr className="bg-[#f9ecdb]">
+                  {[
+                    { label: "Vehicle / Plate", key: "plate", align: "left" },
+                    { label: "vs Fleet Avg", key: "relativeRisk", align: "center", highlight: true },
+                    { label: "Risk Score", key: "riskScore", align: "right" },
+                    { label: "Status", key: "riskLevel", align: "center" },
+                    { label: "Alerts/km", key: "alertsPerKm", align: "right" },
+                    { label: "Behavior", key: "behaviorRate", align: "center" },
+                    { label: "Speed Index", key: "speedingIndex", align: "center" },
+                    { label: "Idle Ratio", key: "idleRatio", align: "center" },
+                    { label: "KM", key: "sKms", align: "right" }
+                  ].map((col, i) => (
+                    <th 
+                      key={i} 
+                      className="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest cursor-pointer hover:bg-[#ede1cf]"
+                      onClick={() => handleSort(col.key)}
+                    >
+                      <div className={`flex items-center gap-1 ${col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'} ${col.highlight ? 'text-[#c70017]' : ''}`}>
+                         {col.label}
+                         {sortConfig.key === col.key ? (
+                           sortConfig.dir === 'asc' ? <ChevronUp size={10} /> : <ChevronDown size={10} />
+                         ) : (
+                           <ChevronsUpDown size={10} className="text-[#a8a29e]/30" />
+                         )}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[#926f6b]/5 text-sm">
                 {loading ? (
-                  <tr><td colSpan={3} className="py-20 text-center"><Loader2 className="animate-spin mx-auto w-6 h-6" style={{ color: "#c70017" }} /></td></tr>
-                ) : paginatedViolations.length === 0 ? (
-                  <tr><td colSpan={3} className="py-20 text-center pl-overline">{t("no_recent_activity")}</td></tr>
-                ) : paginatedViolations.map((v, i) => (
-                  <tr key={v.id || i} className="hover:bg-[#fff8f2] transition-colors">
-                    <td className="px-5 py-4 text-sm font-bold" style={{ color: "#211b10" }}>{v.plate}</td>
-                    <td className="px-5 py-4 text-sm text-slate-500 font-mono">{format(v.date.toDate(), "MMM dd, yyyy")}</td>
-                    <td className="px-5 py-4 text-sm" style={{ color: "#c70017" }}>{v.type}</td>
+                  <tr><td colSpan={9} className="py-24 text-center text-[#a8a29e]">Syncing Recalibrated Analysis...</td></tr>
+                ) : dashboardData.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-24 text-center">
+                       <p className="text-lg font-semibold text-[#5d3f3c]">Operational Database Empty</p>
+                       <p className="text-sm text-[#a8a29e]">Import a the Risk Report to generate insights.</p>
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  dashboardData.map((d, i) => (
+                    <tr key={i} className="hover:bg-[#fff8f2] transition-colors group cursor-default">
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-[#211b10]">{d.plate}</span>
+                          <span className="text-[10px] text-[#a8a29e] font-medium">{d.vehicleName}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${d.relativeRisk > 1.2 ? 'bg-[#c70017]/10 text-[#c70017]' : d.relativeRisk < 0.8 ? 'bg-[#10b981]/10 text-[#10b981]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+                          {d.relativeRisk.toFixed(1)}x {d.relativeRisk > 1 ? "Worse" : "Better"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <span className={`text-lg font-black tracking-tighter ${d.riskScore >= 75 ? 'text-[#c70017]' : 'text-[#211b10]'}`}>
+                          {Math.round(d.riskScore)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex justify-center">
+                          <div className={`w-2 h-2 rounded-full shadow-inner animate-pulse`} style={{ backgroundColor: (RISK_COLORS as any)[d.riskLevel] }} />
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-xs">
+                        {d.alertsPerKm.toFixed(3)}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                         <div className="flex flex-col items-center gap-1">
+                            <span className="text-[10px] font-mono">{(d.behaviorRate * 100).toFixed(0)}%</span>
+                            <div className="w-10 h-0.5 bg-gray-100 rounded-full overflow-hidden">
+                               <div className="h-full bg-[#5d3f3c]" style={{ width: `${d.behaviorRate * 100}%` }} />
+                            </div>
+                         </div>
+                      </td>
+                      <td className="px-4 py-4 text-center font-mono text-xs">
+                        {d.speedingIndex.toFixed(1)}
+                      </td>
+                      <td className="px-4 py-4 text-center font-mono text-xs">
+                        {(d.idleRatio * 100).toFixed(1)}%
+                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-xs">
+                        {Math.round(d.sKms).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
-          {!loading && paginatedViolations.length > 0 && (
-            <PaginationControl 
-              current={vPage} total={processedViolations.length} 
-              rowsPerPage={vRowsPerPage} setRowsPerPage={setVRowsPerPage} setPage={setVPage} 
-            />
-          )}
         </div>
-      </section>
+      </div>
     </div>
   );
 }

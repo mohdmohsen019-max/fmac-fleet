@@ -15,6 +15,9 @@ export interface Vehicle {
   id?: string;
   plateNumber: string;
   makeAndModel?: string;
+  busNumber?: string;
+  lastDrivenBy?: string;
+  lastDriverId?: string;
   type: "Car" | "Bus";
   currentOdometer: number;
   status: "Active" | "In Maintenance" | "Out of Service";
@@ -76,10 +79,18 @@ export interface Scorecard {
   id?: string;
   plate: string;
   kms: number;
+  trips: number;
+  afterHoursTrips: number;
   braking: number;
   acceleration: number;
   cornering: number;
-  speeding: number;
-  totalScore: number;
+  idlingCount: number;
+  idlingTime: string; // "HH:MM:SS"
+  speed80: number;
+  speed100: number;
+  speed120: number;
+  speed140: number;
+  avgSpeed: number;
+  totalDuration: string; // "HH:MM:SS"
   updatedAt: Timestamp;
 }

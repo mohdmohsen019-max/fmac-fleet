@@ -26,8 +26,8 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (password.length < 6) { setError(t("password_min_6")); return; }
-    if (password !== confirmPassword) { setError(t("passwords_no_match")); return; }
+    if (password.length < 6) { setError(t("password min 6")); return; }
+    if (password !== confirmPassword) { setError(t("passwords no match")); return; }
     setLoading(true);
     try {
       const existingUsers = await getAllUsers();
@@ -54,20 +54,20 @@ export default function SignupPage() {
 
       <div className="mb-10 text-center">
         <img
-          src="/fmac-logo.png"
+          src="/favicon.png"
           alt="FMAC"
-          className="h-14 w-auto object-contain mx-auto mb-2"
+          className="h-20 w-20 object-contain mx-auto mb-4"
         />
         <p className="pl-overline">Fleet Management System</p>
       </div>
 
       <div className="w-full max-w-md rounded-sm p-8" style={{ backgroundColor: "#ffffff", boxShadow: "0 0 24px -4px rgba(33,27,16,0.06)" }}>
-        <p className="pl-overline mb-1">{t("register_desc")}</p>
+        <p className="pl-overline mb-1">{t("register desc")}</p>
         <h1 className="text-xl font-semibold mb-7" style={{ color: "#211b10" }}>{t("register")}</h1>
 
         <form onSubmit={handleSignup} className="space-y-5">
           <div>
-            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("full_name")}</label>
+            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("full name")}</label>
             <input type="text" required placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)}
               className={inputCls} style={{ borderColor: "rgba(146,111,107,0.25)" }} />
           </div>
@@ -82,15 +82,15 @@ export default function SignupPage() {
               className={inputCls} style={{ borderColor: "rgba(146,111,107,0.25)" }} />
           </div>
           <div>
-            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("confirm_password")}</label>
+            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("confirm password")}</label>
             <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
               className={inputCls} style={{ borderColor: "rgba(146,111,107,0.25)" }} />
           </div>
 
           {/* Language preference */}
           <div>
-            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("preferred_language")}</label>
-            <p className="text-xs mb-3" style={{ color: "#a8a29e" }}>{t("preferred_language_desc")}</p>
+            <label className={labelCls} style={{ color: "#5d3f3c" }}>{t("preferred language")}</label>
+            <p className="text-xs mb-3" style={{ color: "#a8a29e" }}>{t("preferred language desc")}</p>
             <div className="grid grid-cols-3 gap-2">
               {LANG_OPTIONS.map(lang => (
                 <button
@@ -115,13 +115,13 @@ export default function SignupPage() {
           )}
 
           <button type="submit" disabled={loading} className="btn-precision w-full flex items-center justify-center gap-2 py-3">
-            {loading ? <><Loader2 size={14} className="animate-spin" /> {t("creating")}</> : t("create_account")}
+            {loading ? <><Loader2 size={14} className="animate-spin" /> {t("creating")}</> : t("create account")}
           </button>
         </form>
 
         <p className="text-xs text-center mt-6" style={{ color: "#5d3f3c" }}>
-          {t("already_account")}{" "}
-          <Link href="/login" className="font-bold" style={{ color: "#c70017" }}>{t("log_in")}</Link>
+          {t("already account")}{" "}
+          <Link href="/login" className="font-bold" style={{ color: "#c70017" }}>{t("log in")}</Link>
         </p>
       </div>
 

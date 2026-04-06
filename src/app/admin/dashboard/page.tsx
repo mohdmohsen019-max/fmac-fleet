@@ -72,14 +72,14 @@ export default function AdminDashboard() {
             <span className="text-4xl font-semibold leading-none tracking-tight" style={{ color: "#211b10" }}>
               {vehicles.length}
             </span>
-            <span className="pl-overline mt-2">{t("total_vehicles")}</span>
+            <span className="pl-overline mt-2">{t("total vehicles")}</span>
           </div>
 
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
             <span className="text-4xl font-semibold leading-none tracking-tight" style={{ color: "#16a34a" }}>
               {activeVehicles}
             </span>
-            <span className="pl-overline mt-2">{t("vehicles_active")}</span>
+            <span className="pl-overline mt-2">{t("vehicles active")}</span>
           </div>
 
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
@@ -91,7 +91,7 @@ export default function AdminDashboard() {
                 <span className="w-2 h-2 rounded-full animate-pulse flex-shrink-0" style={{ backgroundColor: "#c70017" }} />
               )}
             </div>
-            <span className="pl-overline mt-2">{t("in_maintenance_count")}</span>
+            <span className="pl-overline mt-2">{t("in maintenance count")}</span>
           </div>
 
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
               {totalDistance7D.toLocaleString()}
               <span className="text-lg font-medium ms-1" style={{ color: "#5d3f3c" }}>km</span>
             </span>
-            <span className="pl-overline mt-2">{t("distance_7d")}</span>
+            <span className="pl-overline mt-2">{t("distance 7d")}</span>
           </div>
 
         </div>
@@ -113,10 +113,10 @@ export default function AdminDashboard() {
         <section className="lg:col-span-8 rounded-sm p-6 md:p-8" style={{ backgroundColor: "#ffffff" }}>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "#211b10" }}>
-              {t("mileage_trend")}
+              {t("mileage trend")}
             </h2>
             <div className="flex gap-4">
-              <span className="text-[0.6875rem] font-bold" style={{ color: "#c70017" }}>● {t("distance_7d")}</span>
+              <span className="text-[0.6875rem] font-bold" style={{ color: "#c70017" }}>● {t("distance 7d")}</span>
             </div>
           </div>
           <div className="h-52 md:h-64">
@@ -165,11 +165,11 @@ export default function AdminDashboard() {
         {/* Recent Activity */}
         <section className="lg:col-span-4 rounded-sm p-6" style={{ backgroundColor: "#f9ecdb" }}>
           <h2 className="text-xs font-bold uppercase tracking-widest mb-6" style={{ color: "#211b10" }}>
-            {t("recent_activity")}
+            {t("recent activity")}
           </h2>
           <div className="space-y-4">
             {recentActivity.length === 0 ? (
-              <p className="text-sm" style={{ color: "#5d3f3c" }}>{t("no_recent_activity")}</p>
+              <p className="text-sm" style={{ color: "#5d3f3c" }}>{t("no recent activity")}</p>
             ) : recentActivity.map((item) => {
               const isTrip = "distance" in item;
               const v = vehicles.find(v => v.id === item.vehicleId);
@@ -181,10 +181,10 @@ export default function AdminDashboard() {
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-none truncate" style={{ color: "#211b10" }}>
-                      {isTrip ? `${t("trip_logged")} — ${(item as Trip).distance} km` : t("maintenance_recorded")}
+                      {isTrip ? `${t("trip logged")} — ${(item as Trip).distance} km` : t("maintenance recorded")}
                     </p>
                     <p className="text-[0.6875rem] mt-1 font-mono" style={{ color: "#5d3f3c" }}>
-                      {v ? v.plateNumber : t("unknown_vehicle")} · {format((item.createdAt as any).toDate(), "MMM dd, HH:mm")}
+                      {v ? v.plateNumber : t("unknown vehicle")} · {format((item.createdAt as any).toDate(), "MMM dd, HH:mm")}
                     </p>
                   </div>
                 </div>
@@ -196,12 +196,12 @@ export default function AdminDashboard() {
 
       {/* ── Fleet Utilization strip ── */}
       <section>
-        <p className="pl-overline mb-6">{t("fleet_vehicles")}</p>
+        <p className="pl-overline mb-6">{t("fleet vehicles")}</p>
         <div className="grid grid-cols-3 gap-3 md:gap-6">
           {[
             { label: t("active"), value: activeVehicles, total: vehicles.length, color: "#16a34a" },
-            { label: t("in_maintenance_count"), value: vehiclesNeedingService, total: vehicles.length, color: "#c70017" },
-            { label: t("out_of_service_count"), value: outOfService, total: vehicles.length, color: "#a8a29e" },
+            { label: t("in maintenance count"), value: vehiclesNeedingService, total: vehicles.length, color: "#c70017" },
+            { label: t("out of service count"), value: outOfService, total: vehicles.length, color: "#a8a29e" },
           ].map(({ label, value, total, color }) => (
             <div key={label} className="p-4 md:p-6 rounded-sm" style={{ backgroundColor: "#f9ecdb" }}>
               <p className="pl-overline truncate">{label}</p>

@@ -58,7 +58,7 @@ export default function MaintenancePage() {
       await addMaintenance(logData, vehicle?.plateNumber || "Unknown");
       setShowAddLog(false); setDescription(""); setCost(""); setSelectedVehicle("");
       await fetchData();
-    } catch (e) { console.error(e); alert(t("failed_create_record")); }
+    } catch (e) { console.error(e); alert(t("failed create record")); }
     finally { setSubmittingLog(false); }
   };
 
@@ -70,7 +70,7 @@ export default function MaintenancePage() {
       await uploadStatement(file, monthYear, profile.uid);
       setShowAddStatement(false); setFile(null); setMonthYear("");
       await fetchData();
-    } catch (e) { console.error(e); alert(t("failed_upload")); }
+    } catch (e) { console.error(e); alert(t("failed upload")); }
     finally { setUploading(false); }
   };
 
@@ -87,8 +87,8 @@ export default function MaintenancePage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="pl-overline mb-1">{t("maintenance_records_desc")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("maintenance_records")}</h1>
+          <p className="pl-overline mb-1">{t("maintenance records desc")}</p>
+          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("maintenance records")}</h1>
         </div>
         {/* View toggle */}
         <div className="flex items-center gap-1 p-1 rounded-sm self-start sm:self-auto" style={{ backgroundColor: "#f9ecdb" }}>
@@ -101,7 +101,7 @@ export default function MaintenancePage() {
               boxShadow: view === "logs" ? "0 1px 4px rgba(33,27,16,0.06)" : "none",
             }}
           >
-            <Wrench size={12} /> {t("maintenance_logs")}
+            <Wrench size={12} /> {t("maintenance logs")}
           </button>
           <button
             onClick={() => setView("statements")}
@@ -112,7 +112,7 @@ export default function MaintenancePage() {
               boxShadow: view === "statements" ? "0 1px 4px rgba(33,27,16,0.06)" : "none",
             }}
           >
-            <FileText size={12} /> {t("monthly_statements")}
+            <FileText size={12} /> {t("monthly statements")}
           </button>
         </div>
       </div>
@@ -122,17 +122,17 @@ export default function MaintenancePage() {
         <div className="grid grid-cols-2 lg:flex lg:items-end gap-4 lg:gap-x-14">
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
             <span className="text-3xl font-semibold leading-none" style={{ color: "#211b10" }}>{maintenance.length}</span>
-            <p className="pl-overline mt-2">{t("maintenance_logs")}</p>
+            <p className="pl-overline mt-2">{t("maintenance logs")}</p>
           </div>
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
             <span className="text-3xl font-semibold leading-none" style={{ color: "#211b10" }}>{thisMonth}</span>
-            <p className="pl-overline mt-2">{t("this_month")}</p>
+            <p className="pl-overline mt-2">{t("this month")}</p>
           </div>
           <div className="flex flex-col p-4 lg:p-0 rounded-sm lg:rounded-none col-span-2 lg:col-span-1" style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
             <span className="text-3xl font-semibold leading-none" style={{ color: "#c70017" }}>
               {totalCost > 0 ? `AED ${totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—"}
             </span>
-            <p className="pl-overline mt-2">{t("total_cost")}</p>
+            <p className="pl-overline mt-2">{t("total cost")}</p>
           </div>
         </div>
       )}
@@ -144,34 +144,34 @@ export default function MaintenancePage() {
               onClick={() => setShowAddLog(!showAddLog)}
               className={showAddLog ? "btn-secondary flex items-center gap-1.5" : "btn-precision flex items-center gap-1.5"}
             >
-              {showAddLog ? <><X size={14} /> {t("cancel")}</> : <><Plus size={14} /> {t("log_maintenance")}</>}
+              {showAddLog ? <><X size={14} /> {t("cancel")}</> : <><Plus size={14} /> {t("log maintenance")}</>}
             </button>
           </div>
 
           {showAddLog && (
             <div className="p-4 sm:p-6 rounded-sm" style={{ backgroundColor: "#f9ecdb", border: "1px solid rgba(199,0,23,0.15)" }}>
-              <p className="pl-overline mb-1">{t("log_maint_desc")}</p>
-              <h2 className="text-base font-semibold mb-5" style={{ color: "#211b10" }}>{t("log_maint_entry")}</h2>
+              <p className="pl-overline mb-1">{t("log maint desc")}</p>
+              <h2 className="text-base font-semibold mb-5" style={{ color: "#211b10" }}>{t("log maint entry")}</h2>
               <form onSubmit={handleAddMaintenance} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("select_vehicle")}</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("select vehicle")}</Label>
                   <select value={selectedVehicle} onChange={e => setSelectedVehicle(e.target.value)} required className={selectCls}>
-                    <option value="" disabled>{t("select_vehicle_placeholder")}</option>
+                    <option value="" disabled>{t("select vehicle placeholder")}</option>
                     {vehicles.map(v => <option key={v.id} value={v.id}>{v.plateNumber} ({v.type})</option>)}
                   </select>
                 </div>
                 <div className="space-y-1.5 sm:col-span-2 lg:col-span-4">
-                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("description_of_work")}</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("description of work")}</Label>
                   <Input value={description} onChange={e => setDescription(e.target.value)} required className={inputCls} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("cost_optional")}</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("cost optional")}</Label>
                   <Input type="number" min="0" step="0.01" value={cost} onChange={e => setCost(e.target.value)} className={inputCls} />
                 </div>
                 <div className="flex justify-end lg:col-start-4">
                   <button type="submit" disabled={submittingLog} className="btn-precision w-full sm:w-auto flex items-center justify-center gap-1.5">
                     {submittingLog && <Loader2 className="animate-spin w-3 h-3" />}
-                    {t("save_log")}
+                    {t("save log")}
                   </button>
                 </div>
               </form>
@@ -185,7 +185,7 @@ export default function MaintenancePage() {
                 <tr className="table-head-precision">
                   <th className="px-5 py-3 text-left">{t("date")}</th>
                   <th className="px-5 py-3 text-left">{t("plate")}</th>
-                  <th className="px-5 py-3 text-left">{t("description_of_work")}</th>
+                  <th className="px-5 py-3 text-left">{t("description of work")}</th>
                   <th className="px-5 py-3 text-right">{t("cost")}</th>
                 </tr>
               </thead>
@@ -193,7 +193,7 @@ export default function MaintenancePage() {
                 {loading ? (
                   <tr><td colSpan={4} className="text-center py-12"><Loader2 className="mx-auto h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></td></tr>
                 ) : maintenance.length === 0 ? (
-                  <tr><td colSpan={4} className="text-center py-12 pl-overline">{t("no_maintenance")}</td></tr>
+                  <tr><td colSpan={4} className="text-center py-12 pl-overline">{t("no maintenance")}</td></tr>
                 ) : maintenance.map((m, i) => {
                   const v = vehicles.find(v => v.id === m.vehicleId);
                   return (
@@ -224,7 +224,7 @@ export default function MaintenancePage() {
             {loading ? (
               <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></div>
             ) : maintenance.length === 0 ? (
-              <div className="py-10 text-center pl-overline">{t("no_maintenance")}</div>
+              <div className="py-10 text-center pl-overline">{t("no maintenance")}</div>
             ) : maintenance.map(m => {
               const v = vehicles.find(v => v.id === m.vehicleId);
               return (
@@ -253,27 +253,27 @@ export default function MaintenancePage() {
               onClick={() => setShowAddStatement(!showAddStatement)}
               className={showAddStatement ? "btn-secondary flex items-center gap-1.5" : "btn-precision flex items-center gap-1.5"}
             >
-              {showAddStatement ? <><X size={14} /> {t("cancel")}</> : <><Upload size={14} /> {t("upload_statement")}</>}
+              {showAddStatement ? <><X size={14} /> {t("cancel")}</> : <><Upload size={14} /> {t("upload statement")}</>}
             </button>
           </div>
 
           {showAddStatement && (
             <div className="p-4 sm:p-6 rounded-sm" style={{ backgroundColor: "#f9ecdb", border: "1px solid rgba(199,0,23,0.15)" }}>
-              <p className="pl-overline mb-1">{t("upload_monthly_desc")}</p>
-              <h2 className="text-base font-semibold mb-5" style={{ color: "#211b10" }}>{t("upload_monthly")}</h2>
+              <p className="pl-overline mb-1">{t("upload monthly desc")}</p>
+              <h2 className="text-base font-semibold mb-5" style={{ color: "#211b10" }}>{t("upload monthly")}</h2>
               <form onSubmit={handleUploadStatement} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("month_year")}</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("month year")}</Label>
                   <Input type="month" value={monthYear} onChange={e => setMonthYear(e.target.value)} required className={inputCls} />
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("statement_file")}</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("statement file")}</Label>
                   <Input type="file" accept=".pdf,.xlsx,.xls,.png,.jpg" onChange={e => setFile(e.target.files?.[0] || null)} required className={inputCls + " cursor-pointer"} />
                 </div>
                 <div className="flex justify-end lg:col-start-4">
                   <button type="submit" disabled={uploading} className="btn-precision w-full sm:w-auto flex items-center justify-center gap-1.5">
                     {uploading && <Loader2 className="animate-spin w-3 h-3" />}
-                    {t("upload_file")}
+                    {t("upload file")}
                   </button>
                 </div>
               </form>
@@ -285,7 +285,7 @@ export default function MaintenancePage() {
             <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></div>
           ) : statements.length === 0 ? (
             <div className="py-14 text-center rounded-sm" style={{ border: "1px dashed rgba(146,111,107,0.3)", color: "#5d3f3c" }}>
-              <p className="pl-overline">{t("no_statements")}</p>
+              <p className="pl-overline">{t("no statements")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

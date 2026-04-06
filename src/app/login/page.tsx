@@ -23,7 +23,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
     } catch {
-      setError(t("invalid_credentials"));
+      setError(t("invalid credentials"));
     } finally { setLoading(false); }
   };
 
@@ -36,17 +36,17 @@ export default function LoginPage() {
       {/* Logo area */}
       <div className="mb-10 text-center">
         <img
-          src="/fmac-logo.png"
+          src="/favicon.png"
           alt="FMAC"
-          className="h-14 w-auto object-contain mx-auto mb-2"
+          className="h-20 w-20 object-contain mx-auto mb-4"
         />
         <p className="pl-overline">Fleet Management System</p>
       </div>
 
       {/* Card */}
       <div className="w-full max-w-sm rounded-sm p-8" style={{ backgroundColor: "#ffffff", boxShadow: "0 0 24px -4px rgba(33,27,16,0.06)" }}>
-        <p className="pl-overline mb-1">{t("sign_in_title")}</p>
-        <h1 className="text-xl font-semibold mb-7" style={{ color: "#211b10" }}>{t("welcome_back")}</h1>
+        <p className="pl-overline mb-1">{t("sign in title")}</p>
+        <h1 className="text-xl font-semibold mb-7" style={{ color: "#211b10" }}>{t("welcome back")}</h1>
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
@@ -76,14 +76,14 @@ export default function LoginPage() {
           )}
 
           <button type="submit" disabled={loading} className="btn-precision w-full flex items-center justify-center gap-2 py-3">
-            {loading ? <><Loader2 size={14} className="animate-spin" /> {t("signing_in")}</> : t("sign_in")}
+            {loading ? <><Loader2 size={14} className="animate-spin" /> {t("signing in")}</> : t("sign in")}
           </button>
         </form>
 
         <p className="text-xs text-center mt-6" style={{ color: "#5d3f3c" }}>
-          {t("no_account")}{" "}
+          {t("no account")}{" "}
           <Link href="/signup" className="font-bold transition-colors" style={{ color: "#c70017" }}>
-            {t("sign_up")}
+            {t("sign up")}
           </Link>
         </p>
       </div>

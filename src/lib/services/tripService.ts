@@ -37,6 +37,7 @@ export const getAllTrips = async (): Promise<Trip[]> => {
 // Logs a trip, updates the vehicle odometer, and creates an audit log
 export const logTrip = async (
   driverId: string,
+  driverName: string,
   vehicleId: string,
   tripType: "Internal" | "External",
   startOdometer: number,
@@ -63,8 +64,9 @@ export const logTrip = async (
 
     const currentOdometer = vehicleDoc.data().currentOdometer;
 
-    if (startOdometer < currentOdometer) {
-      throw new Error("Start odometer is lower than vehicle's current recorded odometer.");
+    if (startOdometer < currentOdometer - 50) {
+      // Allow minor downward corrections if needed, but prevent total zeroing by accident
+      throw new Error(`Start odometer too low (Vehicle: ${currentOdometer}, Entered: ${startOdometer}). Manual correction is limited to -50km for safety.`);
     }
 
     const tripData: Omit<Trip, "id"> = {
@@ -91,7 +93,11 @@ export const logTrip = async (
     };
 
     // Update vehicle
-    transaction.update(vehicleRef, { currentOdometer: endOdometer });
+    transaction.update(vehicleRef, { 
+      currentOdometer: endOdometer,
+      lastDrivenBy: driverName,
+      lastDriverId: driverId
+    });
     // Write Trip
     transaction.set(newTripRef, tripData);
     // Write Immutable Audit Log

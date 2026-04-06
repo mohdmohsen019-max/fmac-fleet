@@ -117,7 +117,7 @@ export default function ReportsPage() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Trips");
       XLSX.writeFile(wb, `fmac_trips_${new Date().toISOString().split("T")[0]}.xlsx`);
-    } catch { alert(t("failed_export")); }
+    } catch { alert(t("failed export")); }
     finally { setExporting(null); }
   };
 
@@ -134,7 +134,7 @@ export default function ReportsPage() {
         styles: { fontSize: 8 },
       });
       doc.save(`fmac_trips_${new Date().toISOString().split("T")[0]}.pdf`);
-    } catch { alert(t("failed_export")); }
+    } catch { alert(t("failed export")); }
     finally { setExporting(null); }
   };
 
@@ -146,7 +146,7 @@ export default function ReportsPage() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Maintenance");
       XLSX.writeFile(wb, `fmac_maintenance_${new Date().toISOString().split("T")[0]}.xlsx`);
-    } catch { alert(t("failed_export")); }
+    } catch { alert(t("failed export")); }
     finally { setExporting(null); }
   };
 
@@ -163,7 +163,7 @@ export default function ReportsPage() {
         styles: { fontSize: 9 }, columnStyles: { 3: { cellWidth: 70 } },
       });
       doc.save(`fmac_maintenance_${new Date().toISOString().split("T")[0]}.pdf`);
-    } catch { alert(t("failed_export")); }
+    } catch { alert(t("failed export")); }
     finally { setExporting(null); }
   };
 
@@ -172,8 +172,8 @@ export default function ReportsPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="pl-overline mb-1">{t("reports_desc")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("reports_exports")}</h1>
+          <p className="pl-overline mb-1">{t("reports desc")}</p>
+          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("reports exports")}</h1>
         </div>
         <button onClick={fetchAll} disabled={loading} className="btn-secondary flex items-center gap-1.5 self-start sm:self-auto">
           <RefreshCcw size={12} className={loading ? "animate-spin" : ""} /> Refresh
@@ -183,8 +183,8 @@ export default function ReportsPage() {
       {/* ── Tab switcher ── */}
       <div className="flex items-center gap-1 p-1 rounded-sm w-full sm:w-fit" style={{ backgroundColor: "#f9ecdb" }}>
         {[
-          { id: "trips" as const, icon: <FileSpreadsheet size={12} />, label: t("trip_logs") },
-          { id: "maintenance" as const, icon: <FileText size={12} />, label: t("maintenance_logs") },
+          { id: "trips" as const, icon: <FileSpreadsheet size={12} />, label: t("trip logs") },
+          { id: "maintenance" as const, icon: <FileText size={12} />, label: t("maintenance logs") },
         ].map(tab => (
           <button
             key={tab.id}
@@ -215,7 +215,7 @@ export default function ReportsPage() {
                 className="w-full h-9 border px-3 text-sm bg-white rounded-[4px] focus:outline-none focus:border-[#c70017] transition-colors cursor-pointer"
                 style={{ borderColor: "rgba(146,111,107,0.2)" }}
               >
-                <option value="">{t("all_vehicles")}</option>
+                <option value="">{t("all vehicles")}</option>
                 {vehicles.map(v => <option key={v.id} value={v.id}>{v.plateNumber}{v.makeAndModel ? ` — ${v.makeAndModel}` : ""}</option>)}
               </select>
             </div>
@@ -223,7 +223,7 @@ export default function ReportsPage() {
             {/* Row 2: From / To side by side */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <p className="pl-overline">{t("from_date")}</p>
+                <p className="pl-overline">{t("from date")}</p>
                 <input
                   type="date" value={tripStart}
                   onChange={e => { setTripStart(e.target.value); setTripPage(1); }}
@@ -232,7 +232,7 @@ export default function ReportsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <p className="pl-overline">{t("to_date")}</p>
+                <p className="pl-overline">{t("to date")}</p>
                 <input
                   type="date" value={tripEnd}
                   onChange={e => { setTripEnd(e.target.value); setTripPage(1); }}
@@ -270,10 +270,10 @@ export default function ReportsPage() {
                 <tr className="table-head-precision">
                   <th className="px-5 py-3 text-left">{t("date")}</th>
                   <th className="px-5 py-3 text-left">{t("plate")}</th>
-                  <th className="px-5 py-3 text-left hidden md:table-cell">{t("make_and_model")}</th>
-                  <th className="px-5 py-3 text-left">{t("type_col")}</th>
-                  <th className="px-5 py-3 text-right hidden lg:table-cell">{t("start_odo_col")}</th>
-                  <th className="px-5 py-3 text-right hidden lg:table-cell">{t("end_odo_col")}</th>
+                  <th className="px-5 py-3 text-left hidden md:table-cell">{t("make and model")}</th>
+                  <th className="px-5 py-3 text-left">{t("type col")}</th>
+                  <th className="px-5 py-3 text-right hidden lg:table-cell">{t("start odo col")}</th>
+                  <th className="px-5 py-3 text-right hidden lg:table-cell">{t("end odo col")}</th>
                   <th className="px-5 py-3 text-right">{t("distance")}</th>
                 </tr>
               </thead>
@@ -281,7 +281,7 @@ export default function ReportsPage() {
                 {loading ? (
                   <tr><td colSpan={7} className="text-center py-12"><Loader2 className="mx-auto h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></td></tr>
                 ) : pagedTrips.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center py-12 pl-overline">{t("no_trip_records")}</td></tr>
+                  <tr><td colSpan={7} className="text-center py-12 pl-overline">{t("no trip records")}</td></tr>
                 ) : pagedTrips.map((trip, i) => {
                   const v = vehicles.find(v => v.id === trip.vehicleId);
                   return (
@@ -315,7 +315,7 @@ export default function ReportsPage() {
             {loading ? (
               <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></div>
             ) : pagedTrips.length === 0 ? (
-              <div className="py-10 text-center pl-overline">{t("no_trip_records")}</div>
+              <div className="py-10 text-center pl-overline">{t("no trip records")}</div>
             ) : pagedTrips.map(trip => {
               const v = vehicles.find(v => v.id === trip.vehicleId);
               return (
@@ -356,13 +356,13 @@ export default function ReportsPage() {
                 className="w-full h-9 border px-3 text-sm bg-white rounded-[4px] focus:outline-none focus:border-[#c70017] transition-colors cursor-pointer"
                 style={{ borderColor: "rgba(146,111,107,0.2)" }}
               >
-                <option value="">{t("all_vehicles")}</option>
+                <option value="">{t("all vehicles")}</option>
                 {vehicles.map(v => <option key={v.id} value={v.id}>{v.plateNumber}{v.makeAndModel ? ` — ${v.makeAndModel}` : ""}</option>)}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <p className="pl-overline">{t("from_date")}</p>
+                <p className="pl-overline">{t("from date")}</p>
                 <input
                   type="date" value={maintStart}
                   onChange={e => { setMaintStart(e.target.value); setMaintPage(1); }}
@@ -371,7 +371,7 @@ export default function ReportsPage() {
                 />
               </div>
               <div className="space-y-1">
-                <p className="pl-overline">{t("to_date")}</p>
+                <p className="pl-overline">{t("to date")}</p>
                 <input
                   type="date" value={maintEnd}
                   onChange={e => { setMaintEnd(e.target.value); setMaintPage(1); }}
@@ -405,8 +405,8 @@ export default function ReportsPage() {
                 <tr className="table-head-precision">
                   <th className="px-5 py-3 text-left">{t("date")}</th>
                   <th className="px-5 py-3 text-left">{t("plate")}</th>
-                  <th className="px-5 py-3 text-left hidden md:table-cell">{t("make_and_model")}</th>
-                  <th className="px-5 py-3 text-left">{t("description_of_work")}</th>
+                  <th className="px-5 py-3 text-left hidden md:table-cell">{t("make and model")}</th>
+                  <th className="px-5 py-3 text-left">{t("description of work")}</th>
                   <th className="px-5 py-3 text-right hidden md:table-cell">{t("cost")}</th>
                 </tr>
               </thead>
@@ -414,7 +414,7 @@ export default function ReportsPage() {
                 {loading ? (
                   <tr><td colSpan={5} className="text-center py-12"><Loader2 className="mx-auto h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></td></tr>
                 ) : pagedMaint.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-12 pl-overline">{t("no_maint_records")}</td></tr>
+                  <tr><td colSpan={5} className="text-center py-12 pl-overline">{t("no maint records")}</td></tr>
                 ) : pagedMaint.map((m, i) => {
                   const v = vehicles.find(v => v.id === m.vehicleId);
                   return (
@@ -441,7 +441,7 @@ export default function ReportsPage() {
             {loading ? (
               <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></div>
             ) : pagedMaint.length === 0 ? (
-              <div className="py-10 text-center pl-overline">{t("no_maint_records")}</div>
+              <div className="py-10 text-center pl-overline">{t("no maint records")}</div>
             ) : pagedMaint.map(m => {
               const v = vehicles.find(v => v.id === m.vehicleId);
               return (

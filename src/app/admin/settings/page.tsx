@@ -25,18 +25,18 @@ export default function SettingsPage() {
 
       {/* ── Profile Section ── */}
       <section>
-        <p className="pl-overline mb-6">{t("profile_settings")}</p>
+        <p className="pl-overline mb-6">{t("profile settings")}</p>
         <div className="rounded-sm overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
           <div className="grid grid-cols-1 sm:grid-cols-2">
             <div className="p-5 sm:p-6" style={{ borderBottom: "1px solid rgba(146,111,107,0.1)", borderRight: "1px solid rgba(146,111,107,0.1)" }}>
-              <p className="pl-overline mb-1">{t("full_name")}</p>
+              <p className="pl-overline mb-1">{t("full name")}</p>
               <p className="text-base font-semibold mt-1" style={{ color: "#211b10" }}>{profile?.displayName || "—"}</p>
-              <p className="text-xs mt-1" style={{ color: "#a8a29e" }}>{t("name_synced")}</p>
+              <p className="text-xs mt-1" style={{ color: "#a8a29e" }}>{t("name synced")}</p>
             </div>
             <div className="p-5 sm:p-6" style={{ borderBottom: "1px solid rgba(146,111,107,0.1)" }}>
-              <p className="pl-overline mb-1">{t("email_address")}</p>
+              <p className="pl-overline mb-1">{t("email address")}</p>
               <p className="text-base font-semibold mt-1 break-all" style={{ color: "#211b10" }}>{profile?.email || "—"}</p>
-              <p className="text-xs mt-1" style={{ color: "#a8a29e" }}>{t("primary_email")}</p>
+              <p className="text-xs mt-1" style={{ color: "#a8a29e" }}>{t("primary email")}</p>
             </div>
             <div className="p-5 sm:p-6">
               <p className="pl-overline mb-1">{t("role")}</p>
@@ -51,7 +51,7 @@ export default function SettingsPage() {
       {/* ── Language Section ── */}
       <section>
         <p className="pl-overline mb-1">{t("language")}</p>
-        <p className="text-sm mb-6" style={{ color: "#5d3f3c" }}>{t("language_desc")}</p>
+        <p className="text-sm mb-6" style={{ color: "#5d3f3c" }}>{t("language desc")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {(["en", "ar", "ur"] as Language[]).map((lang) => (
             <button

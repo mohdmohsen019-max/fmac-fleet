@@ -25,8 +25,8 @@ const adminNavItems: NavItem[] = [
 ];
 
 const driverNavItems: NavItem[] = [
-  { key: "log_new_trip", href: "/driver/dashboard" },
-  { key: "trip_history", href: "/driver/history" },
+  { key: "log new trip", href: "/driver/dashboard" },
+  { key: "trip history", href: "/driver/history" },
 ];
 
 interface TopNavProps {
@@ -64,9 +64,9 @@ export function TopNav({ mode }: TopNavProps) {
             className="flex items-center flex-shrink-0"
           >
             <img
-              src="/fmac-logo.png"
+              src="/favicon.png"
               alt="FMAC"
-              style={{ height: "32px", width: "auto", objectFit: "contain", maxWidth: "90px" }}
+              className="w-10 h-10 object-contain"
             />
           </Link>
 
@@ -130,7 +130,7 @@ export function TopNav({ mode }: TopNavProps) {
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#5d3f3c"; }}
           >
             <LogOut size={14} />
-            {t("sign_out")}
+            {t("sign out")}
           </button>
 
           {/* Hamburger */}
@@ -209,7 +209,7 @@ export function TopNav({ mode }: TopNavProps) {
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
                 >
                   <LogOut size={14} />
-                  {t("sign_out")}
+                  {t("sign out")}
                 </button>
               </div>
             </nav>

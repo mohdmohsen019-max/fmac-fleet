@@ -32,7 +32,7 @@ export default function AdminUsersPage() {
 
   const handleToggleRole = async (uid: string, currentRole: string) => {
     const newRole = currentRole === "admin" ? "driver" : "admin";
-    if (confirm(`${t("role_change_confirm")} ${newRole.toUpperCase()}?`)) {
+    if (confirm(`${t("role change confirm")} ${newRole.toUpperCase()}?`)) {
       try {
         await updateUser(uid, { role: newRole });
         setUsers(users.map(u => u.uid === uid ? { ...u, role: newRole } : u));
@@ -44,8 +44,8 @@ export default function AdminUsersPage() {
     <div className="space-y-10">
       {/* ── Header ── */}
       <div>
-        <p className="pl-overline mb-1">{t("user_management_desc")}</p>
-        <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("user_management")}</h1>
+        <p className="pl-overline mb-1">{t("user management desc")}</p>
+        <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("user management")}</h1>
       </div>
 
       {/* ── Table (Desktop) ── */}
@@ -57,8 +57,8 @@ export default function AdminUsersPage() {
                 <th className="px-5 py-3 text-left">{t("user")}</th>
                 <th className="px-5 py-3 text-left hidden sm:table-cell">{t("contact")}</th>
                 <th className="px-5 py-3 text-left hidden md:table-cell">{t("joined")}</th>
-                <th className="px-5 py-3 text-center">{t("status_col")}</th>
-                <th className="px-5 py-3 text-center hidden sm:table-cell">{t("role_col")}</th>
+                <th className="px-5 py-3 text-center">{t("status col")}</th>
+                <th className="px-5 py-3 text-center hidden sm:table-cell">{t("role col")}</th>
                 <th className="px-5 py-3 text-right">{t("actions")}</th>
               </tr>
             </thead>
@@ -66,7 +66,7 @@ export default function AdminUsersPage() {
               {loading ? (
                 <tr><td colSpan={6} className="text-center py-12"><Loader2 className="mx-auto h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-12 pl-overline">{t("no_users")}</td></tr>
+                <tr><td colSpan={6} className="text-center py-12 pl-overline">{t("no users")}</td></tr>
               ) : users.map((u, i) => {
                 const isSelf = profile?.uid === u.uid;
                 return (
@@ -145,7 +145,7 @@ export default function AdminUsersPage() {
         {loading ? (
           <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></div>
         ) : users.length === 0 ? (
-          <div className="py-10 text-center pl-overline">{t("no_users")}</div>
+          <div className="py-10 text-center pl-overline">{t("no users")}</div>
         ) : users.map(u => {
           const isSelf = profile?.uid === u.uid;
           return (

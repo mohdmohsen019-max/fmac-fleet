@@ -30,7 +30,7 @@ export default function VehiclesPage() {
 
   const [plateNumber, setPlateNumber] = useState("");
   const [makeAndModel, setMakeAndModel] = useState("");
-  const [type, setType] = useState<"Car" | "Bus">("Car");
+  const [busNumber, setBusNumber] = useState("");
   const [currentOdometer, setCurrentOdometer] = useState<number>(0);
   const [status, setStatus] = useState<"Active" | "In Maintenance" | "Out of Service">("Active");
 
@@ -47,16 +47,23 @@ export default function VehiclesPage() {
     e.preventDefault();
     if (!plateNumber.trim()) return;
     try {
-      await addVehicle({ plateNumber: plateNumber.toUpperCase(), makeAndModel: makeAndModel.trim() || undefined, type, currentOdometer: Number(currentOdometer), status });
-      setAdding(false); setPlateNumber(""); setMakeAndModel(""); setCurrentOdometer(0); setType("Car"); setStatus("Active");
+      await addVehicle({ 
+        plateNumber: plateNumber.toUpperCase(), 
+        makeAndModel: makeAndModel.trim() || undefined, 
+        busNumber: busNumber.trim() || "N/A",
+        type: "Bus", 
+        currentOdometer: Number(currentOdometer), 
+        status 
+      });
+      setAdding(false); setPlateNumber(""); setMakeAndModel(""); setBusNumber(""); setCurrentOdometer(0); setStatus("Active");
       await fetchVehicles();
-    } catch (err) { console.error(err); alert(t("failed_add_vehicle")); }
+    } catch (err) { console.error(err); alert(t("failed add vehicle")); }
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm(t("delete_vehicle_confirm"))) {
+    if (confirm(t("delete vehicle confirm"))) {
       try { await deleteVehicle(id); setVehicles(prev => prev.filter(v => v.id !== id)); }
-      catch (err) { console.error(err); alert(t("failed_delete")); }
+      catch (err) { console.error(err); alert(t("failed delete")); }
     }
   };
 
@@ -64,18 +71,18 @@ export default function VehiclesPage() {
     try {
       await updateVehicle(id, { status: newStatus as any });
       setVehicles(prev => prev.map(v => v.id === id ? { ...v, status: newStatus as any } : v));
-    } catch (err) { console.error(err); alert(t("failed_update_status")); }
+    } catch (err) { console.error(err); alert(t("failed update status")); }
   };
 
   const handleEditOdometer = async (id: string, current: number) => {
-    const val = window.prompt(t("edit_odometer_prompt"), current.toString());
+    const val = window.prompt(t("edit odometer prompt"), current.toString());
     if (val === null) return;
     const parsed = Number(val);
-    if (isNaN(parsed) || parsed < 0) { alert(t("invalid_odometer")); return; }
+    if (isNaN(parsed) || parsed < 0) { alert(t("invalid odometer")); return; }
     try {
       await updateVehicle(id, { currentOdometer: parsed });
       setVehicles(prev => prev.map(v => v.id === id ? { ...v, currentOdometer: parsed } : v));
-    } catch (err) { console.error(err); alert(t("failed_update_odometer")); }
+    } catch (err) { console.error(err); alert(t("failed update odometer")); }
   };
 
   const inputCls = "flex h-9 w-full border px-3 py-1 text-sm bg-white focus:outline-none focus:border-[#c70017] transition-colors rounded-[4px]";
@@ -87,8 +94,8 @@ export default function VehiclesPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="pl-overline mb-1">{t("fleet_vehicles_desc")}</p>
-          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("fleet_vehicles")}</h1>
+          <p className="pl-overline mb-1">{t("fleet vehicles desc")}</p>
+          <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "#211b10" }}>{t("fleet vehicles")}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -103,7 +110,7 @@ export default function VehiclesPage() {
             onClick={() => setAdding(!adding)}
             className="btn-precision flex items-center gap-1.5"
           >
-            {adding ? <><X size={14} /> {t("cancel")}</> : <><Plus size={14} /> {t("add_vehicle")}</>}
+            {adding ? <><X size={14} /> {t("cancel")}</> : <><Plus size={14} /> {t("add vehicle")}</>}
           </button>
         </div>
       </div>
@@ -114,38 +121,35 @@ export default function VehiclesPage() {
           className="p-4 sm:p-6 rounded-sm"
           style={{ backgroundColor: "#f9ecdb", border: "1px solid rgba(199,0,23,0.2)" }}
         >
-          <p className="pl-overline mb-1">{t("register_vehicle_desc")}</p>
-          <h2 className="text-base font-semibold mb-5" style={{ color: "#211b10" }}>{t("register_vehicle")}</h2>
+          <p className="pl-overline mb-1">{t("register vehicle desc")}</p>
+          <h2 className="text-base font-semibold mb-5" style={{ color: "#211b10" }}>{t("register vehicle")}</h2>
           <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div className="space-y-1.5 font-mono">
-              <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("plate_number")}</Label>
+              <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("plate number")}</Label>
               <Input id="plate" value={plateNumber} onChange={e => setPlateNumber(e.target.value)} required placeholder="e.g. DXB-12345" className={inputCls} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("make_and_model")}</Label>
+              <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("make and model")}</Label>
               <Input value={makeAndModel} onChange={e => setMakeAndModel(e.target.value)} placeholder="e.g. Toyota Hiace" className={inputCls} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("vehicle_type")}</Label>
-              <select value={type} onChange={e => setType(e.target.value as any)} className={selectCls}>
-                <option value="Car">{t("type_car")}</option>
-                <option value="Bus">{t("type_bus")}</option>
-              </select>
+              <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("bus id") || "Bus ID"}</Label>
+              <Input value={busNumber} onChange={e => setBusNumber(e.target.value)} placeholder="e.g. 1" className={inputCls} />
             </div>
             <div className="space-y-1.5 font-mono">
-              <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("initial_odometer")}</Label>
+              <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("initial odometer")}</Label>
               <Input type="number" min="0" value={currentOdometer} onChange={e => setCurrentOdometer(Number(e.target.value))} required className={inputCls} />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#5d3f3c" }}>{t("status")}</Label>
               <select value={status} onChange={e => setStatus(e.target.value as any)} className={selectCls}>
                 <option value="Active">{t("active")}</option>
-                <option value="In Maintenance">{t("in_maintenance")}</option>
-                <option value="Out of Service">{t("out_of_service")}</option>
+                <option value="In Maintenance">{t("in maintenance")}</option>
+                <option value="Out of Service">{t("out of service")}</option>
               </select>
             </div>
             <div className="sm:col-span-2 lg:col-span-3 xl:col-span-5 flex justify-end pt-2">
-              <button type="submit" className="btn-precision">{t("save_vehicle")}</button>
+              <button type="submit" className="btn-precision">{t("save vehicle")}</button>
             </div>
           </form>
         </div>
@@ -156,9 +160,10 @@ export default function VehiclesPage() {
         <table className="w-full border-collapse">
           <thead>
             <tr className="table-head-precision">
-              <th className="px-5 py-3 text-left">{t("plate_number")}</th>
-              <th className="px-5 py-3 text-left hidden sm:table-cell">{t("make_and_model")}</th>
-              <th className="px-5 py-3 text-left hidden md:table-cell">{t("vehicle_type")}</th>
+              <th className="px-5 py-3 text-left">{t("plate number")}</th>
+              <th className="px-5 py-3 text-left">{t("bus id") || "Bus #"}</th>
+              <th className="px-5 py-3 text-left hidden sm:table-cell">{t("make and model")}</th>
+              <th className="px-5 py-3 text-left hidden lg:table-cell">{t("last driven by") || "Last Driven By"}</th>
               <th className="px-5 py-3 text-left hidden lg:table-cell">{t("odometer")}</th>
               <th className="px-5 py-3 text-left">{t("status")}</th>
               <th className="px-5 py-3 text-right">{t("actions")}</th>
@@ -168,20 +173,17 @@ export default function VehiclesPage() {
             {(loading && vehicles.length === 0) ? (
               <tr><td colSpan={6} className="text-center py-12"><Loader2 className="mx-auto h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></td></tr>
             ) : (!loading && vehicles.length === 0) ? (
-              <tr><td colSpan={6} className="text-center py-12 pl-overline">{t("no_vehicles")}</td></tr>
+              <tr><td colSpan={6} className="text-center py-12 pl-overline">{t("no vehicles")}</td></tr>
             ) : vehicles.map((v, i) => (
               <tr
                 key={v.id}
-                className="transition-colors group"
+                className="pl-table-hover transition-all duration-300 group"
                 style={{ backgroundColor: i % 2 === 0 ? "#ffffff" : "#fff8f2" }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#fff2e0")}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? "#ffffff" : "#fff8f2")}
               >
                 <td className="px-5 py-4 font-bold text-sm whitespace-nowrap" style={{ color: "#211b10" }}>{v.plateNumber}</td>
+                <td className="px-5 py-4 text-sm font-bold" style={{ color: "#c70017" }}>{v.busNumber || "N/A"}</td>
                 <td className="px-5 py-4 text-sm hidden sm:table-cell" style={{ color: "#5d3f3c" }}>{v.makeAndModel || "—"}</td>
-                <td className="px-5 py-4 text-sm hidden md:table-cell" style={{ color: "#5d3f3c" }}>
-                  {v.type === "Car" ? t("type_car") : t("type_bus")}
-                </td>
+                <td className="px-5 py-4 text-sm hidden lg:table-cell" style={{ color: "#5d3f3c" }}>{v.lastDrivenBy || "—"}</td>
                 <td className="px-5 py-4 font-mono text-sm hidden lg:table-cell" style={{ color: "#5d3f3c" }}>
                   {v.currentOdometer.toLocaleString()} km
                 </td>
@@ -193,8 +195,8 @@ export default function VehiclesPage() {
                     style={{ color: "#211b10" }}
                   >
                     <option value="Active">● {t("active")}</option>
-                    <option value="In Maintenance">● {t("in_maintenance")}</option>
-                    <option value="Out of Service">● {t("out_of_service")}</option>
+                    <option value="In Maintenance">● {t("in maintenance")}</option>
+                    <option value="Out of Service">● {t("out of service")}</option>
                   </select>
                 </td>
                 <td className="px-5 py-4 text-right">
@@ -230,15 +232,18 @@ export default function VehiclesPage() {
         {(loading && vehicles.length === 0) ? (
           <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin" style={{ color: "#c70017" }} /></div>
         ) : (!loading && vehicles.length === 0) ? (
-          <div className="py-10 text-center pl-overline">{t("no_vehicles")}</div>
+          <div className="py-10 text-center pl-overline">{t("no vehicles")}</div>
         ) : vehicles.map(v => (
           <div key={v.id} className="rounded-sm p-4" style={{ backgroundColor: "#ffffff" }}>
             <div className="flex justify-between items-start mb-3">
               <div>
-                <p className="text-base font-bold" style={{ color: "#211b10" }}>{v.plateNumber}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-base font-bold" style={{ color: "#211b10" }}>{v.plateNumber}</p>
+                  <span className="text-[10px] bg-[#f9ecdb] px-1.5 py-0.5 rounded-sm font-bold text-[#c70017]">#{v.busNumber || "N/A"}</span>
+                </div>
                 {v.makeAndModel && <p className="text-xs mt-0.5" style={{ color: "#5d3f3c" }}>{v.makeAndModel}</p>}
                 <p className="text-[10px] uppercase font-bold tracking-widest mt-1" style={{ color: "#a8a29e" }}>
-                  {v.type === "Car" ? t("type_car") : t("type_bus")}
+                  {t("last driven by") || "Last Driven"}: {v.lastDrivenBy || "—"}
                 </p>
               </div>
               <div className="text-right">
@@ -257,8 +262,8 @@ export default function VehiclesPage() {
                 style={{ color: "#211b10" }}
               >
                 <option value="Active">● {t("active")}</option>
-                <option value="In Maintenance">● {t("in_maintenance")}</option>
-                <option value="Out of Service">● {t("out_of_service")}</option>
+                <option value="In Maintenance">● {t("in maintenance")}</option>
+                <option value="Out of Service">● {t("out of service")}</option>
               </select>
             </div>
           </div>
